@@ -1,0 +1,5 @@
+# there's a problem with-chakra-ui example (error in browser when connecting to localhost:3000)
+# add to .yarnrc.yml
+pnpMode: "loose"
+
+# and then it seems to work

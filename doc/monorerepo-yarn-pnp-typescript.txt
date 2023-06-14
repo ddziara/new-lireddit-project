@@ -1,0 +1,32 @@
+yarn init -w                    # initialize for workspace
+
+yarn add -D typescript          # add typescript before next step (vscode integration)
+yarn dlx @yarnpkg/sdks vscode   # only SDKs for tools present in package.json (typescript in this case) will be installed !!!
+
+# add the following tsconfig.json in root workspace:
+
+{
+  "exclude": ["packages/**/__tests__/**", "packages/**/dist/**"],
+  "references": [
+    {
+      "path": "./packages/lireddit-server"
+      ...
+    }
+  ]
+}
+
+# add the following in every referenced tsconfig.json
+
+{
+    ...
+    "composite": true, 
+    ...
+}
+
+yarn plugin import typescript   # install plugnin to manage dependencies automatically 
+
+yarn packages/lireddit init     # starting a new library inside a monorepo directly, without manually creating directories for it 
+
+yarn tsc --build --force        # --build for faster building projects --force act as if all projects are out of date
+
+yarn workspace lireddit-server build    # build project separately

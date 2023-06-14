@@ -1,0 +1,8 @@
+Cookie property: Max-Age
+
+As of Chrome release M104 (August 2022) cookies can no longer set an expiration 
+date more than 400 days in the future. This change does not impact session cookies—cookies 
+that do not explicitly set an expiration date with Max-Age or Expires —as these are instead 
+cleared when the browsing session ends.
+
+Note: The same behaviour in Microsoft Edge

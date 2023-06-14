@@ -1,0 +1,49 @@
+# Ben Awad's betterUpdateQuery() to have better  type casting
+import { cacheExchange, Cache, QueryInput } from "@urql/exchange-graphcache";
+
+function betterUpdateQuery<Result, Query>(
+    cache: Cache,
+    qi: QueryInput,
+    result: any,
+    fn: (r: Result, q:Query) => Query) {
+    return cache.updateQuery(qi, data => fn(result, data as any) as any)
+}
+
+# in _app.tsx
+
+const client = new Client({
+  url: "http://192.168.0.8:4000/graphql",
+  exchanges: [
+    cacheExchange({
+      updates: {
+        Mutation: {
+          login: (result: LoginMutation, args, cache, info) => {
+//            cache.updateQuery({ query: MeDocument }, (data: MeQuery | null) => {
+//              return null;
+//            });
+              betterUpdateQuery<LoginMutation, MeQuery>(cache, 
+              {
+                query: MeDosument
+              }, 
+              result, 
+              (result, query) => {
+                if(result.result.errors) {
+                    return query;
+                }
+                else {
+                    return {
+                        me: result.login.user;
+                    }
+                }
+              }
+              )
+          },
+        },
+      },
+    }),
+    fetchExchange,
+  ],
+  fetchOptions: {
+    credentials: "include",
+  },
+});

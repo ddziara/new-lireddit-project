@@ -1,0 +1,2 @@
+# To solve missing module problem install (I don't know why it works)
+yarn workspace web add -D @graphql-typed-document-node/core@3.2.0

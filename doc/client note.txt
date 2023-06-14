@@ -1,0 +1,4 @@
+request.credentials has to be set to "include"  (or maybe "same-origin") but not "omit"
+
+The credentials read-only property of the Request interface indicates whether the user agent 
+should send or receive cookies from the other domain in the case of cross-origin requests.

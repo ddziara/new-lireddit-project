@@ -1,0 +1,4 @@
+Most common used version of package is being hoisted to the root of node_modules
+
+node_modules
+  most-common-used-version-of-package

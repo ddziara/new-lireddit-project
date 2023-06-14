@@ -1,0 +1,22 @@
+In loose mode Yarn 2 do not install any new dependencies, it adds fallback resolutions only. 
+The fallback pool is a set of resolutions that can be used by all of your dependencies, 
+it is a data structure stored inside .pnp.js file in a fallbackPool property. 
+All of your dependencies can access the dependencies that would have been hoisted 
+to the root node_modules folder. Yarn 2 determines this by running node_modules 
+installation strategy in-memory and getting the list of dependencies hoisted to 
+the root node_modules folder.
+
+Please note, that closely related configuration option to pnpMode: 
+loose is a pnpFallbackMode option. pnpFallbackMode determines who is allowed to use fallback 
+dependencies. By default only dependencies of a root project are allowed to use fallback 
+dependencies and workspace dependencies are not allowed to do so. 
+With pnpFallbackMode: all both root project and workspace dependencies can rely on fallback 
+dependencies. And with pnpFallbackMode: none - fallback dependencies are not allowed to be used at all.
+
+Loose mode is useful for migration to Yarn 2 PnP, since some packages in JavaScript ecosystem heavily 
+rely on the fact that they can access packages hoisted to the top-level node_modules. 
+Though they are relying on the fact they shouldn't, in loose PnP mode Yarn will only issue 
+a warning and let these packages work, instead of throwing access violation error.
+
+Loose mode is a hybrid between old node_modules and newer PnP installation scheme, meant for easier 
+migration to PnP.

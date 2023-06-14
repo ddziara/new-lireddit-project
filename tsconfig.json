@@ -1,0 +1,8 @@
+{
+  "exclude": ["packages/**/__tests__/**", "packages/**/dist/**"],
+  "references": [
+    {
+      "path": "./packages/server"
+    }
+  ]
+}

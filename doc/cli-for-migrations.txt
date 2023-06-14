@@ -1,0 +1,41 @@
+# install the CLI package first!
+$ yarn add @mikro-orm/cli
+
+# manually
+$ node node_modules/.bin/mikro-orm
+
+# via npx
+$ npx mikro-orm
+
+# or via yarn
+$ yarn mikro-orm
+
+# in package.json add:
+{
+  ...
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/mikro-orm.config.ts",
+      "./dist/src/mikro-orm.config.js"
+    ]
+  }
+  ...
+}
+
+# create mikro-orm.config.ts
+
+import { Options } from '@mikro-orm/core';
+
+const config: Options = {
+  entities: [Author, Book, BookTag], // no need for `entitiesTs` this way
+  dbName: 'my-db-name',
+  type: 'mongo', // one of `mongo` | `mysql` | `mariadb` | `postgresql` | `sqlite`
+};
+
+export default config;
+
+# use mikro-orm.config.ts
+
+import config from './mikro-orm.config';
+const orm = await MikroORM.init(config);

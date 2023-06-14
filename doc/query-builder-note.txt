@@ -1,0 +1,28 @@
+import { EntityManager } from "@mikro-orm/postgresql"
+
+...
+
+
+    const hashedPassword = await argon2.hash(options.password);
+
+//    const user = em!.create(User, {
+//      user: options.user,
+//      password: hashedPassword,
+//    } as RequiredEntityData<User>);
+
+    let user;
+
+    try {
+        const result = await (em as EntityManager).createQueryBuilder(User).getKnexQuery().insert(          // <=============
+          {
+            user: options.user,
+            password: hashedPassword,
+            created_at: new Date(),         // name of column in database
+            updated_at: new Date()          // name of column in database
+          }
+        ).returning("*");
+
+        user = result[0];
+        
+//      await em!.persistAndFlush(user);
+    } catch (err: any) {

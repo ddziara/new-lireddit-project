@@ -1,0 +1,13 @@
+url: https://the-guild.dev/graphql/codegen/docs/getting-started
+
+yarn workspace web add -D @graphql-codegen/cli
+yarn workspace web add -D @graphql-codegen/client-preset
+
+# this generates codegen.ts (configuration file)
+
+yarn graphql-code-generator init
+
+# graphql queries, mutations ("documents" in codegen.ts) are extracted either from *.grphql files or from *.ts (gql`some string`, gql tagged strings)
+
+# in our case they are *.graphql file in "src/graphql" directory
+
