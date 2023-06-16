@@ -1,6 +1,7 @@
 import { fetchExchange } from "urql";
 import { cacheExchange } from "@urql/exchange-graphcache";
-import { LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation } from "../gql/graphql";
+import { LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation, RegularErrorFragment, RegularErrorFragmentDoc, RegularUserFragment, RegularUserFragmentDoc, RegularUserResponseFragmentDoc } from "../gql/graphql";
+import { useFragment } from "../gql";
 
 export const createUrqlClient = (ssrExchange: any) => ({
     url: "http://192.168.0.8:4000/graphql",
@@ -17,22 +18,62 @@ export const createUrqlClient = (ssrExchange: any) => ({
             },
             login: (result: LoginMutation, args, cache, info) => {
               cache.updateQuery({ query: MeDocument }, (data: MeQuery | null) => {
-                if (result.login.errors) {
+                const regularUserResponseFragmentDoc = useFragment(
+                  RegularUserResponseFragmentDoc,
+                  result.login
+                );
+      
+                let errors: readonly RegularErrorFragment[] | null | undefined;
+                let user: RegularUserFragment | null | undefined
+      
+                if (regularUserResponseFragmentDoc) {
+                  errors = useFragment(
+                    RegularErrorFragmentDoc,
+                    regularUserResponseFragmentDoc.errors
+                  );
+      
+                  user = useFragment(
+                      RegularUserFragmentDoc,
+                      regularUserResponseFragmentDoc.user
+                    );
+                 }
+      
+                if (errors) {
                   return data;
                 } else {
                   return {
-                    me: result.login.user,
+                    me: user,
                   };
                 }
               });
             },
             register: (result: RegisterMutation, args, cache, info) => {
               cache.updateQuery({ query: MeDocument }, (data: MeQuery | null) => {
-                if (result.register.errors) {
+                const regularUserResponseFragmentDoc = useFragment(
+                  RegularUserResponseFragmentDoc,
+                  result.register
+                );
+      
+                let errors: readonly RegularErrorFragment[] | null | undefined;
+                let user: RegularUserFragment | null | undefined
+      
+                if (regularUserResponseFragmentDoc) {
+                  errors = useFragment(
+                    RegularErrorFragmentDoc,
+                    regularUserResponseFragmentDoc.errors
+                  );
+      
+                  user = useFragment(
+                      RegularUserFragmentDoc,
+                      regularUserResponseFragmentDoc.user
+                    );
+                 }
+      
+                if (errors) {
                   return data;
                 } else {
                   return {
-                    me: result.register.user,
+                    me: user,
                   };
                 }
               });
@@ -44,6 +85,6 @@ export const createUrqlClient = (ssrExchange: any) => ({
       fetchExchange,
     ],
     fetchOptions: {
-      credentials: "include",
+      credentials: "include" as const,
     },
   });

@@ -1,15 +1,23 @@
 import React from "react";
 import { Form, Formik } from "formik";
-import {
-  Box,
-  Button,
-} from "@chakra-ui/react";
+import { Box, Button, Flex, Link } from "@chakra-ui/react";
 import { Wrapper } from "../components/Wrapper";
 import { InputField } from "../components/InputField";
 import { useMutation, useQuery } from "urql";
-import { LoginDocument } from "../gql/graphql";
+import {
+  LoginDocument,
+  RegularErrorFragment,
+  RegularErrorFragmentDoc,
+  RegularUserFragment,
+  RegularUserFragmentDoc,
+  RegularUserResponseFragmentDoc,
+} from "../gql/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/router";
+import { createUrqlClient } from "../utils/createUrqlClient";
+import { withUrqlClient } from "next-urql";
+import { useFragment } from "../gql";
+import NextLink from "next/link";
 
 interface loginProps {}
 
@@ -23,21 +31,45 @@ export const Login: React.FC<loginProps> = () => {
   return (
     <Wrapper variant="small">
       <Formik
-        initialValues={{ user: "", password: "" }}
+        initialValues={{ usernameOrEmail: "", password: "" }}
         onSubmit={async (values, { setErrors }) => {
-          const response = await login({ options: values }); // returning Promise to avoid forever spinning on Submit button
+          const response = await login(values); // returning Promise to avoid forever spinning on Submit button
 
-          if (response.data?.login.errors) {
-            setErrors(toErrorMap(response.data.login.errors));
-          } else if (response.data?.login.user) {
+          const regularUserResponseFragmentDoc = useFragment(
+            RegularUserResponseFragmentDoc,
+            response.data?.login
+          );
+
+          let errors: readonly RegularErrorFragment[] | null | undefined;
+          let user: RegularUserFragment | null | undefined;
+
+          if (regularUserResponseFragmentDoc) {
+            errors = useFragment(
+              RegularErrorFragmentDoc,
+              regularUserResponseFragmentDoc.errors
+            );
+
+            user = useFragment(
+              RegularUserFragmentDoc,
+              regularUserResponseFragmentDoc.user
+            );
+          }
+
+          if (errors) {
+            setErrors(toErrorMap(errors));
+          } else if (user) {
             // worked
-            router.push("/");   // go back to the home page
+            router.push("/"); // go back to the home page
           }
         }}
       >
         {({ isSubmitting }) => (
           <Form>
-            <InputField name="user" placeholder="username" label="Username" />
+            <InputField
+              name="usernameOrEmail"
+              placeholder="username or email"
+              label="Username or Email"
+            />
             <Box mt={4}>
               <InputField
                 name="password"
@@ -46,6 +78,11 @@ export const Login: React.FC<loginProps> = () => {
                 type="password"
               />
             </Box>
+            <Flex mt={2}>
+              <Link ml="auto" as={NextLink} href="/forgot-password">
+                forgot password?
+              </Link>
+            </Flex>
             <Button
               mt={4}
               type="submit"
@@ -61,4 +98,4 @@ export const Login: React.FC<loginProps> = () => {
   );
 };
 
-export default Login;
+export default withUrqlClient(createUrqlClient)(Login);

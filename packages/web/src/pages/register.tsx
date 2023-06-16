@@ -7,9 +7,12 @@ import {
 import { Wrapper } from "../components/Wrapper";
 import { InputField } from "../components/InputField";
 import { useMutation, useQuery } from "urql";
-import { RegisterDocument } from "../gql/graphql";
+import { RegisterDocument, RegularErrorFragment, RegularErrorFragmentDoc, RegularUserFragment, RegularUserFragmentDoc, RegularUserResponseFragmentDoc } from "../gql/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/router";
+import { withUrqlClient } from "next-urql";
+import { createUrqlClient } from "../utils/createUrqlClient";
+import { useFragment } from "../gql";
 
 interface registerProps {}
 
@@ -23,13 +26,33 @@ export const Register: React.FC<registerProps> = () => {
   return (
     <Wrapper variant="small">
       <Formik
-        initialValues={{ user: "", password: "" }}
+        initialValues={{ email: "", user: "", password: "" }}
         onSubmit={async (values, { setErrors }) => {
           const response = await register({ options: values }); // returning Promise to avoid forever spinning on Submit button
 
-          if (response.data?.register.errors) {
-            setErrors(toErrorMap(response.data.register.errors));
-          } else if (response.data?.register.user) {
+          const regularUserResponseFragmentDoc = useFragment(
+            RegularUserResponseFragmentDoc,
+            response.data?.register
+          );
+
+          let errors: readonly RegularErrorFragment[] | null | undefined;
+          let user: RegularUserFragment | null | undefined
+
+          if (regularUserResponseFragmentDoc) {
+            errors = useFragment(
+              RegularErrorFragmentDoc,
+              regularUserResponseFragmentDoc.errors
+            );
+
+            user = useFragment(
+                RegularUserFragmentDoc,
+                regularUserResponseFragmentDoc.user
+              );
+           }
+
+          if (errors) {
+            setErrors(toErrorMap(errors));
+          } else if (user) {
             // worked
             router.push("/");   // go back to the home page
           }
@@ -38,6 +61,14 @@ export const Register: React.FC<registerProps> = () => {
         {({ isSubmitting }) => (
           <Form>
             <InputField name="user" placeholder="username" label="Username" />
+            <Box mt={4}>
+              <InputField
+                name="email"
+                placeholder="email"
+                label="Email"
+                type="email"
+              />
+            </Box>
             <Box mt={4}>
               <InputField
                 name="password"
@@ -52,7 +83,7 @@ export const Register: React.FC<registerProps> = () => {
               colorScheme="teal"
               isLoading={isSubmitting}
             >
-              register
+              forgot password
             </Button>
           </Form>
         )}
@@ -61,4 +92,4 @@ export const Register: React.FC<registerProps> = () => {
   );
 };
 
-export default Register;
+export default withUrqlClient(createUrqlClient)(Register);

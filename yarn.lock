@@ -3747,6 +3747,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/nodemailer@npm:^6":
+  version: 6.4.8
+  resolution: "@types/nodemailer@npm:6.4.8"
+  dependencies:
+    "@types/node": "*"
+  checksum: 3cc9b6a0e54f25a1b36124df413964ff5a69e8dc4558c5dfc06818917313a50f4dbfe31fc9190e4270d07a0f8678474da24a2eae42f907933ea81d983b4772d4
+  languageName: node
+  linkType: hard
+
 "@types/parse-json@npm:^4.0.0":
   version: 4.0.0
   resolution: "@types/parse-json@npm:4.0.0"
@@ -3846,6 +3855,13 @@ __metadata:
     "@types/mime": "*"
     "@types/node": "*"
   checksum: 2e078bdc1e458c7dfe69e9faa83cc69194b8896cce57cb745016580543c7ab5af07fdaa8ac1765eb79524208c81017546f66056f44d1204f812d72810613de36
+  languageName: node
+  linkType: hard
+
+"@types/uuid@npm:^9":
+  version: 9.0.2
+  resolution: "@types/uuid@npm:9.0.2"
+  checksum: 1754bcf3444e1e3aeadd6e774fc328eb53bc956665e2e8fb6ec127aa8e1f43d9a224c3d22a9a6233dca8dd81a12dc7fed4d84b8876dd5ec82d40f574f7ff8b68
   languageName: node
   linkType: hard
 
@@ -7033,6 +7049,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nodemailer@npm:^6.9.3":
+  version: 6.9.3
+  resolution: "nodemailer@npm:6.9.3"
+  checksum: 3bea8316652c0578515d9146d2f24660e4855807520153f061d39af76b440a4f61b4e70f10fed35f8f12f115f6aea1aeb483ea7ba0337c0e3e675f117c41c611
+  languageName: node
+  linkType: hard
+
 "nodemon@npm:^2.0.22":
   version: 2.0.22
   resolution: "nodemon@npm:2.0.22"
@@ -8238,7 +8261,9 @@ __metadata:
     "@types/express": ^4
     "@types/express-session": ^1
     "@types/node": ^20.2.5
+    "@types/nodemailer": ^6
     "@types/pg": ^8
+    "@types/uuid": ^9
     argon2: ^0.30.3
     body-parser: ^1.20.2
     connect-redis: ^7.1.0
@@ -8246,6 +8271,7 @@ __metadata:
     express: ^4.18.2
     express-session: ^1.17.3
     graphql: ^16.6.0
+    nodemailer: ^6.9.3
     nodemon: ^2.0.22
     pg: ^8.11.0
     redis: ^4.6.7
@@ -8253,6 +8279,7 @@ __metadata:
     ts-node: ^10.9.1
     type-graphql: ^2.0.0-beta.2
     typescript: ^5.0.4
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 

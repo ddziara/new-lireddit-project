@@ -1,3 +1,4 @@
 fragment RegularUser on User {
-    id user
+  id
+  user
 }

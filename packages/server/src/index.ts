@@ -43,29 +43,28 @@ const main = async () => {
   });
 
   var corsOptions = {
-    origin: 'http://192.168.0.8:3000',
+    origin: "http://192.168.0.8:3000",
     // optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-    credentials: true
-  }
-    
-  app.use(cors<cors.CorsRequest>(corsOptions)),
+    credentials: true,
+  };
 
-  // Initialize sesssion storage.
-  app.use(
-    session({
-      name: COOKIE_NAME,
-      store: redisStore,
-      cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years (note: browser will change it to 400 days)
-        httpOnly: true,     // JavaScript won't see it in document.cookie
-        sameSite: "lax",    // csrf
-        secure: __prod__,   // only https
-      },
-      resave: false, // required: force lightweight session keep alive (touch)
-      saveUninitialized: false, // recommended: only save session when data exists
-      secret: "dgGdfg$#65Agf6fdertygFDHgfdsy5ywfhgSHgfsh657",
-    })
-  );
+  app.use(cors<cors.CorsRequest>(corsOptions)),
+    // Initialize sesssion storage.
+    app.use(
+      session({
+        name: COOKIE_NAME,
+        store: redisStore,
+        cookie: {
+          maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years (note: browser will change it to 400 days)
+          httpOnly: true, // JavaScript won't see it in document.cookie
+          sameSite: "lax", // csrf
+          secure: __prod__, // only https
+        },
+        resave: false, // required: force lightweight session keep alive (touch)
+        saveUninitialized: false, // recommended: only save session when data exists
+        secret: "dgGdfg$#65Agf6fdertygFDHgfdsy5ywfhgSHgfsh657",
+      })
+    );
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
@@ -86,7 +85,7 @@ const main = async () => {
   const mikroORMRequestCtx: express.RequestHandler = (_, __, next) => {
     RequestContext.create(orm.em, next);
   };
-  
+
   // Specify the path where we'd like to mount our server
   app.use(
     "/graphql",
@@ -97,6 +96,7 @@ const main = async () => {
         em: orm.em,
         req,
         res,
+        redisClient
       }),
     })
   );
@@ -121,7 +121,6 @@ main().catch((err) => {
 // await fork.persistAndFlush(post);
 
 // const posts = await fork.find(Post, {});
-// console.log(posts);
 
 // ===============
 // removed code #2
