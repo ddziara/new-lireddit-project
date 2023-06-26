@@ -1,0 +1,26 @@
+A package is trying to access another package [...]
+Full message: A package is trying to access another package without the second one being listed as a dependency of the first one.
+
+Some packages don't properly list their actual dependencies for a reason or another. Now that we've fully switched to Plug'n'Play and enforce boundaries between the various branches of the dependency tree, this kind of issue will start to become more apparent than it previously was.
+
+The long term fix is to submit a pull request upstream to add the missing dependency to the package listing. Given that it sometimes might take some time before they get merged, we also have a more short-term fix available: create .yarnrc.yml in your project, then use the packageExtensions setting to add the missing dependency to the relevant packages. Once you're done, run yarn install to apply your changes and voilà!
+
+packageExtensions:
+  "debug@*":
+    peerDependenciesMeta:
+      "supports-color":
+        optional: true
+If you also open a PR on the upstream repository you will also be able to contribute your package extension to our compat plugin, helping the whole ecosystem move forward.1
+
+==========================================
+I solved this by adding an entry packageExtensions to the yarn config file .yarnrc.yml
+
+packageExtensions:
+  debug@*:
+    dependencies:
+      supports-color: "*"
+Run yarn after changing the .yarnrc.yml file.
+
+You can find more info on the .yarnrc.yml file here: https://yarnpkg.com/configuration/yarnrc#packageExtensions
+Essentially the packageExtensions of .yarnrc gives you a way to override the dependencies of packages.
+In this case the problem is that debug declares supports-color as a peer-dependency rather than a dependency.

@@ -1,4 +1,3 @@
-import { RequiredEntityData } from "@mikro-orm/core";
 import { User } from "../entities/User";
 import { MyContext } from "../types";
 import {
@@ -48,7 +47,7 @@ export class UserResolver {
   async changePassword(
     @Arg("token") token: string,
     @Arg("newPassword") newPassword: string,
-    @Ctx() { em, redisClient, req }: MyContext
+    @Ctx() { redisClient, req }: MyContext
   ): Promise<UserResponse> {
     const errors = validatePassword(newPassword, "newPassword");
 
@@ -70,7 +69,8 @@ export class UserResolver {
       };
     }
 
-    const user = await em?.findOne(User, { id: parseInt(userId) });
+    const userIdNum = parseInt(userId);
+    const user = await User.findOneBy({ id: userIdNum });
 
     if (!user) {
       return {
@@ -83,8 +83,10 @@ export class UserResolver {
       };
     }
 
-    user.password = await argon2.hash(newPassword);
-    await em?.persistAndFlush(user);
+    await User.update(
+      { id: userIdNum },
+      { password: await argon2.hash(newPassword) }
+    );
 
     await redisClient?.del(key);
 
@@ -101,9 +103,9 @@ export class UserResolver {
   @Mutation(() => Boolean)
   async forgotPassword(
     @Arg("email") email: string,
-    @Ctx() { em, redisClient }: MyContext
+    @Ctx() { redisClient }: MyContext
   ) {
-    const user = await em?.findOne(User, { email });
+    const user = await User.findOneBy({ email });
 
     if (!user) {
       // the email is not in db
@@ -125,21 +127,19 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  async me(@Ctx() { req, em }: MyContext) {
+  me(@Ctx() { req }: MyContext) {
     // you are not logged in
     if (!req!.session.userId) {
       return null;
     }
 
-    const user = await em!.findOne(User, { id: req!.session.userId });
-
-    return user;
+    return User.findOneBy({ id: req!.session.userId });
   }
 
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req, AppDataSource }: MyContext
   ): Promise<UserResponse> {
     const errors = validateRegister(options);
 
@@ -148,15 +148,21 @@ export class UserResolver {
     }
 
     const hashedPassword = await argon2.hash(options.password);
-
-    const user = em!.create(User, {
-      user: options.user,
-      email: options.email,
-      password: hashedPassword,
-    } as RequiredEntityData<User>);
+    let user;
 
     try {
-      await em!.persistAndFlush(user);
+      const result = await AppDataSource?.createQueryBuilder()
+        .insert()
+        .into(User)
+        .values({
+          user: options.user,
+          email: options.email,
+          password: hashedPassword,
+        })
+        .returning("*")
+        .execute();
+
+      user = result!.raw[0];
     } catch (err: any) {
       // duplicate user error
       //err.code === "23505"|| ) {
@@ -184,10 +190,9 @@ export class UserResolver {
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
     @Arg("password") password: string,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
-    const user = await em!.findOne(
-      User,
+    const user = await User.findOneBy(
       usernameOrEmail.includes("@")
         ? { email: usernameOrEmail }
         : { user: usernameOrEmail }
