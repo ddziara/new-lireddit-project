@@ -27,7 +27,7 @@ const main = async () => {
     username: "statler",
     password: "12345aBc",
     logging: true,
-    synchronize: true,
+    synchronize: true,      /* schema should be created on every app. launch; only useful during debugging and development */
     entities: [Post, User],
   });
 
