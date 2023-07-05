@@ -20,7 +20,7 @@ import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../../utils/createUrqlClient";
 import NextLink from "next/link";
 
-export const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
+export const ChangePassword: NextPage<{}> = () => {
   const router = useRouter();
   const [, changePassword] = useMutation(ChangePasswordDocument);
   const [tokenError, setTokenError] = useState("");
@@ -32,7 +32,7 @@ export const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
         onSubmit={async (values, { setErrors }) => {
           const response = await changePassword({
             newPassword: values.newPassword,
-            token,
+            token: typeof router.query.token === "string" ? router.query.token : "",
           }); // returning Promise to avoid forever spinning on Submit button
 
           const regularUserResponseFragmentDoc = useFragment(
@@ -99,12 +99,6 @@ export const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
       </Formik>
     </Wrapper>
   );
-};
-
-ChangePassword.getInitialProps = ({ query }) => {
-  return {
-    token: query.token as string,
-  };
 };
 
 export default withUrqlClient(createUrqlClient)(ChangePassword);

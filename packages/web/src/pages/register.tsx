@@ -83,7 +83,7 @@ export const Register: React.FC<registerProps> = () => {
               colorScheme="teal"
               isLoading={isSubmitting}
             >
-              forgot password
+              register
             </Button>
           </Form>
         )}

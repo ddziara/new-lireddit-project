@@ -1,0 +1,268 @@
+[Local Resolvers]
+
+Previously, we've learned about local resolvers on the "Normalized Caching" page. 
+They allow us to change the data that Graphcache reads as it queries against its 
+local cache, return links that would otherwise not be cached, or even transform 
+scalar records on the fly.
+
+The resolvers option on cacheExchange accepts a map of types with a nested map 
+of fields, which means that we can add local resolvers to any field of any type. 
+For example:
+
+  cacheExchange({
+    resolvers: {
+      Todo: {
+        updatedAt: parent => new Date(parent.updatedAt),
+      },
+    },
+  });
+
+A local resolver function in Graphcache has a similar signature to GraphQL.js' 
+resolvers on the server-side, so their shape should look familiar to us.  
+
+  {
+    TypeName: {
+      fieldName: (parent, args, cache, info) => {
+        return null; // new value
+      },
+    },
+  }
+
+A resolver may be attached to any type's field and accepts four positional arguments:
+
+  * parent: The object on which the field will be added to, which contains the data 
+    as it's being queried. It will contain the current field's raw value if it's a scalar, 
+    which allows us to manipulate scalar values, like parent.updatedAt in the previous example.
+  * args: The arguments that the field is being called with, which will be replaced with 
+    an empty object if the field hasn't been called with any arguments. For example, 
+    if the field is queried as name(capitalize: true) then args would be { capitalize: true }.
+  * cache: Unlike in GraphQL.js this will not be the context, but a cache instance, 
+    which gives us access to methods allowing us to interact with the local cache. 
+    Its full API can be found in the API docs.
+  * info: This argument shouldn't be used frequently, but it contains running information 
+    about the traversal of the query document. It allows us to make resolvers reusable 
+    or to retrieve information about the entire query. Its full API can be found in the API docs.  
+
+[Transforming Records]
+
+  cacheExchange({
+    resolvers: {
+      Todo: {
+        updatedAt: parent => new Date(parent.updatedAt),
+      },
+    },
+  });
+
+We may also run into situations where we'd like to generalise the resolver and not make it dependent 
+on the exact field it's being attached to. In these cases, the info object can be very helpful 
+as it provides us information about the current query traversal, and the part of the query document 
+the cache is processing. The info.fieldName property is one of these properties and lets us know 
+the field that the resolver is operating on. Hence, we can create a reusable resolver like so:  
+
+  const transformToDate = (parent, _args, _cache, info) => new Date(parent[info.fieldName]);
+
+  cacheExchange({
+    resolvers: {
+      Todo: { updatedAt: transformToDate },
+    },
+  });
+
+We also haven't seen yet how to handle a field's arguments. If we have a field that accepts arguments 
+we can use those as well as they're passed to us with the second argument of a resolver: 
+
+  cacheExchange({
+    resolvers: {
+      Todo: {
+        text: (parent, args) => {
+          return args.capitalize && parent.text ? parent.text.toUpperCase() : parent.text;
+        },
+      },
+    },
+  });
+
+[Resolving Entities]
+
+In many cases we can create a local resolvers to instead tell the cache where to look for a specific 
+entity by returning partial information for it. Any resolver on a relational field, meaning any 
+field that links to an object type (or a list of object types) in the schema, may return a partial 
+entity that tells the cache how to resolve it. Hence, we're able to implement a resolver for 
+the previously shown todo(id: $id) field as such:
+
+  cacheExchange({
+    resolvers: {
+      Query: {
+        todo: (_, args) => ({ __typename: 'Todo', id: args.id }),
+      },
+    },
+  });
+
+The __typename field is required. Graphcache will use its keying logic, and your custom keys 
+configuration to generate a key for this entity and will then be able to look this entity up 
+in its local cache. As with regular queries, the resolver is known to return a link since 
+the todo(id: $id) { id } will be used with a selection set, querying fields on the entity. 
+
+[Resolving by keys]
+
+Essentially, returning { __typename, id } may sometimes be the same as returning the key manually. 
+The cache that we receive as an argument on resolvers has a method for this logic, 
+the cache.keyOfEntity method.
+
+
+  keyOfEntity()
+
+  The cache.keyOfEntity method may be called with a partial Data object and will return the key 
+  for that object, or null if it's not keyable.
+
+  An object may not be keyable if it's missing the __typename or id (which falls back to _id) fields. 
+  This method does take the keys configuration into account.
+
+    cache.keyOfEntity({ __typename: 'Todo', id: 1 }); // 'Todo:1'
+    cache.keyOfEntity({ __typename: 'Query' }); // 'Query'
+    cache.keyOfEntity({ __typename: 'Unknown' }); // null  
+
+  There's an alternative method, cache.keyOfField which generates a key for a given field. 
+  This is only rarely needed but similar to cache.keyOfEntity. This method accepts a field name 
+  and optionally a field's arguments.  
+
+    cache.keyOfField('todo'); // 'todo'
+    cache.keyOfField('todo', { id: 1 }); // 'todo({"id":1})'
+ 
+One example is the info.parentKey property. This property on the info object will always be set 
+to the key of the entity that the resolver is currently run on. For instance, for the above 
+resolver it may be "Query", for for a resolver on Todo.updatedAt it may be "Todo:1". 
+
+[Resolving other fields]
+
+Instead we can use the cache.resolve method. This method allows us to access Graphcache's cached 
+data directly. It is used to resolve records or links on any given entity and accepts three 
+arguments:
+
+  * entity: This is the entity on which we'd like to access a field. We may either pass a keyable, 
+    partial entity, e.g. { __typename: 'Todo', id: 1 } or a key. It takes the same inputs as 
+    the cache.keyOfEntity method, which we've seen earlier in the "Resolving by keys" section. 
+    It also accepts null which causes it to return null, which is useful for chaining multiple 
+    resolve calls for deeply accessing a field.
+  * fieldName: This is the field's name we'd like to access. If we're looking for the record 
+    on Todo.updatedAt we would pass "updatedAt" and would receive the record value for this field. 
+    If we pass a field that is a link to another entity then we'd pass that field's name 
+    (e.g. "author" for Todo.author) and cache.resolve will return a key instead of a record value.
+  * fieldArgs: Optionally, as the third argument we may pass the field's arguments, e.g. { id: 1 } 
+    if we're trying to access todo(id: 1) for instance.
+
+This means that we can rewrite our original Todo.updatedAt example as follows, if we'd like to avoid 
+using the parent[fieldName] shortcut:    
+
+  cacheExchange({
+    resolvers: {
+      Todo: {
+        updatedAt: (parent, _args, cache) => new Date(cache.resolve(parent, 'updatedAt')),
+      },
+    },
+  });
+
+Beyond records, we're also able to resolve links and hence jump to records from another entity. 
+Let's suppose we have an author { id, createdAt } field on the Todo and would like Todo.createdAt 
+to simply copy the author's createdAt field. We can chain cache.resolve calls to get to this value:
+
+  cacheExchange({
+    resolvers: {
+      Todo: {
+        createdAt: (parent, _args, cache) =>
+          cache.resolve(cache.resolve(parent, 'author') /* "Author:1" */, 'createdAt'),
+      },
+    },
+  });
+
+[Resolving Partial Data]  
+
+Local resolvers also allow for more advanced use-cases when it comes to links and object types. 
+Previously we've seen how a resolver is able to link up a given field to an entity, which causes 
+this field to resolve an entity directly instead of it being checked against any cached links:
+
+  cacheExchange({
+    resolvers: {
+      Query: {
+        todo: (_, args) => ({ __typename: 'Todo', id: args.id }),
+      },
+    },
+  });
+
+In this example, while __typename and id are required to make this entity keyable, we're also able 
+to add on more fields to this object to override values later on in our selection.  
+
+For instance, we can write a resolver that links Query.todo directly to our Todo entity but also 
+only updates the createdAt field directly in the same resolver, if it is indeed accessed via 
+the Query.todo field:
+
+  cacheExchange({
+    resolvers: {
+      Query: {
+        todo: (_, args) => ({
+          __typename: 'Todo',
+          id: args.id,
+          createdAt: new Date().toString(),
+        }),
+      },
+    },
+  });
+
+Here we've replaced the createdAt value of the Todo when it's accessed via this manual resolver. 
+If it was accessed someplace else, for instance via a Query.todos listing field, 
+this override wouldn't apply. 
+
+[Computed Queries]
+
+We've now seen how the cache has several powerful methods, like the cache.resolve method, 
+which allow us to access any data in the cache while writing resolvers for individual fields.
+
+Additionally the cache has more methods that allow us to access more data at a time, 
+like cache.readQuery and cache.readFragment.
+
+[Reading a query]
+
+At any point, the cache allows us to read entirely separate queries in our resolvers, 
+which starts a separate virtual operation in our resolvers. When we call cache.readQuery 
+with a query and variables we can execute an entirely new GraphQL query against our cached data:
+
+  import { gql } from '@urql/core';
+  import { cacheExchange } from '@urql/exchange-graphcache';
+
+  const cache = cacheExchange({
+    updates: {
+      Mutation: {
+        addTodo: (result, args, cache) => {
+          const data = cache.readQuery({ query: Todos, variables: { from: 0, limit: 10 } });
+        },
+      },
+    },
+  });
+
+This way we'll get the stored data for the TodosQuery for the given variables.
+
+[Reading a fragment]
+
+The store also allows us to read a fragment for any given entity. The cache.readFragment method 
+accepts a fragment and an id. This looks like the following.
+
+  import { gql } from '@urql/core';
+  import { cacheExchange } from '@urql/exchange-graphcache';
+
+  const cache = cacheExchange({
+    resolvers: {
+      Query: {
+        Todo: (parent, args, cache) => {
+          return cache.readFragment(
+            gql`
+              fragment _ on Todo {
+                id
+                text
+              }
+            `,
+            { id: 1 }
+          );
+        },
+      },
+    },
+  });
+
+  

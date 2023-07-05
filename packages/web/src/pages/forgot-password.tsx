@@ -10,7 +10,7 @@ import {
 } from "../gql/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 
-const forgotPassword: React.FC<{}> = ({}) => {
+const ForgotPassword: React.FC<{}> = ({}) => {
   const [complete, setComplete] = useState(false);
   const [, forgotPassword] = useMutation(ForgotPasswordDocument);
 
@@ -47,4 +47,4 @@ const forgotPassword: React.FC<{}> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(forgotPassword);
+export default withUrqlClient(createUrqlClient)(ForgotPassword);

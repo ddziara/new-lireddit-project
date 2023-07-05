@@ -1,0 +1,20 @@
+    const isItInTheCache = cache.resolve(entityKey, fieldName, fieldArgs); 
+    info.partial = !!isItInTheCache; // indicates that some data is uncached
+
+
+# next there's a problem with backend data - the same "createdAt"
+# hence we create a new migrations overriding the other one
+
+npx typeorm migration:create ./src/migrations/FakePosts
+
+# we again generate data at https://mockaroo.com/
+# with fields:
+# tittle         "Movie Title"
+# text           "Paragraphs"    1-3
+# "creatorId"    "Custom List"   [5]
+# "createdAt"    "Datetime"      ISO 8601 (UTC)
+
+
+
+
+

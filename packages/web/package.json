@@ -4,17 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next",
+    "dev:debug": "cross-env NODE_OPTIONS='--inspect' next",
     "build": "next build",
     "start": "next start",
     "gen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
+    "@0no-co/graphql.web": "^1.0.4",
     "@chakra-ui/icons": "^2.0.2",
     "@chakra-ui/react": "^2.2.1",
     "@chakra-ui/theme-tools": "^2.0.2",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.9.0",
     "@urql/exchange-graphcache": "^6.1.1",
+    "cross-env": "^7.0.3",
     "formik": "^2.4.1",
     "framer-motion": "^6.3.0",
     "graphql": "^16.6.0",
@@ -23,7 +26,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-is": "^18.2.0",
-    "urql": "^4.0.3"
+    "urql": "^4.0.3",
+    "wonka": "^6.3.2"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "4.0.1",

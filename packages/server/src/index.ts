@@ -18,20 +18,28 @@ import cors from "cors";
 import { DataSource } from "typeorm";
 import { User } from "./entities/User";
 import { Post } from "./entities/Post";
+import path from "path";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const main = async () => {
   const AppDataSource = new DataSource({
     type: "postgres",
-    database: "lireddit2",
-    host: "192.168.0.8",
-    username: "statler",
-    password: "12345aBc",
-    logging: true,
+    database: process.env.DB_DATABASE,
+    host: process.env.DB_HOST,
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    logging: "all",
     synchronize: true,      /* schema should be created on every app. launch; only useful during debugging and development */
+    migrations: [path.join(__dirname, "./migrations/*")],
     entities: [Post, User],
   });
 
   await AppDataSource.initialize();
+  await AppDataSource.runMigrations();
+
+  
 
   const app = express();
   // Our httpServer handles incoming requests to our Express app.

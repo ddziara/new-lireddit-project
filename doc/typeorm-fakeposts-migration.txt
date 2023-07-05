@@ -1,0 +1,3 @@
+# in "server" directory: 
+npx typeorm migration:create ./src/migrations/FakePosts
+

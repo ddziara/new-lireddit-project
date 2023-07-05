@@ -18,6 +18,7 @@ import { createUrqlClient } from "../utils/createUrqlClient";
 import { withUrqlClient } from "next-urql";
 import { useFragment } from "../gql";
 import NextLink from "next/link";
+import { isServer } from "../utils/isServer";
 
 interface loginProps {}
 
@@ -59,7 +60,9 @@ export const Login: React.FC<loginProps> = () => {
             setErrors(toErrorMap(errors));
           } else if (user) {
             // worked
-            router.push("/"); // go back to the home page
+            const p = router.query.next;
+
+            router.push(typeof p === "string" ? p : "/"); // go back to the next page or the home page
           }
         }}
       >
