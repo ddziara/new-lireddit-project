@@ -16,6 +16,7 @@ import {
   Info,
 } from "type-graphql";
 import { isAuth } from "../middleware/isAuth";
+import { Updoot } from "../entities/Updoot";
 
 @InputType()
 class PostInput {
@@ -41,11 +42,62 @@ export class PostResolver {
     return root.text.slice(0, 50);
   }
 
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async vote(
+    @Arg("postId", () => Int) postId: number,
+    @Arg("value", () => Int) value: number,
+    @Ctx() { req, AppDataSource }: MyContext
+  ) { 
+    const isUpdoot = value !== -1;
+    const realValue = isUpdoot ? 1 : -1;
+    const { userId } = req!.session;
+
+    await AppDataSource!.transaction(async (transactionalEntityManager) => {
+      const updoot = await Updoot.findOneBy({ postId, userId });
+ 
+      // the user has voted on the post before 
+      // and he's changing his vote
+      if (updoot && updoot.value !== realValue) {
+        transactionalEntityManager.query(
+          `update updoot
+  set value = $1
+  WHERE "postId" = $2 AND "userId" = $3`,
+          [realValue, postId, userId]
+        );
+
+        await transactionalEntityManager.query(
+          `UPDATE post p
+  SET points = points + $1
+  WHERE p.id = $2
+  `,
+          [2 * realValue, postId]
+        );
+      } else {
+        await transactionalEntityManager.insert(Updoot, {
+          userId,
+          postId,
+          value: realValue,
+        });
+
+        await transactionalEntityManager.query(
+          `UPDATE post p
+SET points = points + $1
+WHERE p.id = $2
+`,
+          [realValue, postId]
+        );
+      }
+    });
+
+    return true;
+  }
+
   @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-    @Ctx() { AppDataSource }: MyContext,
+    @Ctx() { req, AppDataSource }: MyContext,
     @Info() info: any
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
@@ -53,11 +105,19 @@ export class PostResolver {
 
     const replacements: any[] = [realLimitPlusOne];
 
-    if(cursor) {
-      replacements.push(new Date(cursor));
+    if(req?.session.userId) {
+      replacements.push(req!.session.userId)
     }
 
-    const posts = await AppDataSource!.query(`
+    let cursorIndx = 3;
+
+    if (cursor) {
+      replacements.push(new Date(cursor));
+      cursorIndx = replacements.length;
+    }
+
+    const posts = (await AppDataSource!.query(
+      `
     SELECT p.*, 
     json_build_object(
       'id', u.id,
@@ -65,14 +125,18 @@ export class PostResolver {
       'email', u.email,
       'createdAt', u."createdAt",
       'updatedAt', u."updatedAt"
-      ) creator
+      ) creator,
+      ${req?.session.userId ? `(SELECT value FROM updoot WHERE "userId" = $2 AND "postId" = p.id) "voteStatus"` : 'null as "voteStatus"'}
     FROM post p
     INNER JOIN public.user u ON u.id = p."creatorId"
-    ${cursor ? `WHERE p."createdAt" < $2` : ""}
+    ${cursor ? `WHERE p."createdAt" < ${cursorIndx}` : ""}
     ORDER BY p."createdAt" DESC
     LIMIT $1
-    `, replacements) as unknown as [];
-
+    `,
+      replacements
+    )) as unknown as [];
+    // console.log("GraphQL 'posts' query req?.session: ", req?.session)
+// console.log("posts: ", posts)
     // const qb = AppDataSource!
     //   .getRepository(Post)
     //   .createQueryBuilder("p") // "p" is an alias of table "posts"
@@ -99,8 +163,8 @@ export class PostResolver {
     posts.forEach((val: any) => {
       val["creator"]["createdAt"] = new Date(val["creator"]["createdAt"]);
       val["creator"]["updatedAt"] = new Date(val["creator"]["updatedAt"]);
-    })
- 
+    });
+
     return {
       posts: posts.slice(0, realLimit),
       hasMore: posts.length === realLimitPlusOne,

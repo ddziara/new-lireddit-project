@@ -1,0 +1,14 @@
+https://github.com/urql-graphql/urql-devtools
+
+1. install: @urql/devtools
+
+2. add:
+import { devtoolsExchange } from '@urql/devtools';
+
+const client = createClient({
+    /*...*/
+   exchanges: [devtoolsExchange, /**/],
+});
+
+3. install: extension for browser
+https://chrome.google.com/webstore/detail/urql-devtools/mcfphkbpmkbeofnkjehahlmidmceblmm

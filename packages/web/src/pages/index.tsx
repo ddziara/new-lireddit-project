@@ -1,7 +1,7 @@
 import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import { useQuery } from "urql";
-import { PostsDocument } from "../gql/graphql";
+import { PostsDocument, PostSnippetFragmentDoc } from "../gql/graphql";
 import { Layout } from "../components/Layout";
 import {
   Box,
@@ -13,25 +13,27 @@ import {
   Text,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
-import { isServer } from "../utils/isServer";
 import { useState } from "react";
+import { useFragment } from "../gql";
+import { UpdootSection } from "../components/UpdootSection";
+import { isServer } from "../utils/isServer";
 
 const Index = () => {
   const [variables, setVariables] = useState<{
     limit: number;
     cursor: string | null;
-  }>({ limit: 10, cursor: null });
+  }>({ limit: 15, cursor: null });
 
   const [{ data, fetching }] = useQuery({
     query: PostsDocument,
     variables,
   });
 
-  console.log("variables: ", variables);
-
   if (!fetching && !data) {
     return <div>you got query failed for some reasons</div>;
   }
+
+  console.log(isServer() ? "...Index rendering on server" : "...Index rendering on client")
 
   return (
     <Layout>
@@ -46,21 +48,31 @@ const Index = () => {
         <div>loading...</div>
       ) : (
         <Stack spacing={8}>
-          {data!.posts.posts.map((p) => (
-            <Box key={p.id} p={5} shadow="md" borderWidth="1px">
-              <Heading fontSize="xl">{p.title}</Heading>
-              <Text mt={4}>{p.textSnippet}</Text>
-            </Box>
-          ))}
+          {data!.posts.posts.map((p) => {
+            const postSnippet = useFragment(PostSnippetFragmentDoc, p);
+
+            return (
+              <Flex key={postSnippet.id} p={5} shadow="md" borderWidth="1px">
+                <UpdootSection post={postSnippet} />
+                <Box>
+                  <Heading fontSize="xl">{postSnippet.title}</Heading>
+                  <Text>posted by {postSnippet.creator.user}</Text>
+                  <Text mt={4}>{postSnippet.textSnippet}</Text>
+                </Box>
+              </Flex>
+            );
+          })}
         </Stack>
       )}
       {data && data.posts.hasMore ? (
         <Flex>
           <Button
             onClick={() => {
+              const postSnippet = useFragment(PostSnippetFragmentDoc, data.posts.posts[data.posts.posts.length - 1]);
+
               setVariables({
                 limit: variables.limit,
-                cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
+                cursor: postSnippet.createdAt,
               });
             }}
             isLoading={fetching}

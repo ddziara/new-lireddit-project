@@ -36,7 +36,7 @@ export const Login: React.FC<loginProps> = () => {
         onSubmit={async (values, { setErrors }) => {
           const response = await login(values); // returning Promise to avoid forever spinning on Submit button
 
-          const regularUserResponseFragmentDoc = useFragment(
+          const regularUserResponse = useFragment(
             RegularUserResponseFragmentDoc,
             response.data?.login
           );
@@ -44,15 +44,15 @@ export const Login: React.FC<loginProps> = () => {
           let errors: readonly RegularErrorFragment[] | null | undefined;
           let user: RegularUserFragment | null | undefined;
 
-          if (regularUserResponseFragmentDoc) {
+          if (regularUserResponse) {
             errors = useFragment(
               RegularErrorFragmentDoc,
-              regularUserResponseFragmentDoc.errors
+              regularUserResponse.errors
             );
 
             user = useFragment(
               RegularUserFragmentDoc,
-              regularUserResponseFragmentDoc.user
+              regularUserResponse.user
             );
           }
 

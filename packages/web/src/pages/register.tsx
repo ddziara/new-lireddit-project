@@ -30,7 +30,7 @@ export const Register: React.FC<registerProps> = () => {
         onSubmit={async (values, { setErrors }) => {
           const response = await register({ options: values }); // returning Promise to avoid forever spinning on Submit button
 
-          const regularUserResponseFragmentDoc = useFragment(
+          const regularUserResponse = useFragment(
             RegularUserResponseFragmentDoc,
             response.data?.register
           );
@@ -38,15 +38,15 @@ export const Register: React.FC<registerProps> = () => {
           let errors: readonly RegularErrorFragment[] | null | undefined;
           let user: RegularUserFragment | null | undefined
 
-          if (regularUserResponseFragmentDoc) {
+          if (regularUserResponse) {
             errors = useFragment(
               RegularErrorFragmentDoc,
-              regularUserResponseFragmentDoc.errors
+              regularUserResponse.errors
             );
 
             user = useFragment(
                 RegularUserFragmentDoc,
-                regularUserResponseFragmentDoc.user
+                regularUserResponse.user
               );
            }
 

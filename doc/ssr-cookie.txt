@@ -1,0 +1,53 @@
+ssr
+    browser -> next.js -> graphgl api          
+client side
+    browser -> graph api   
+
+=================================================================
+for ssr cookie isn't send to graphql api
+chnages to make
+
+1.
+
+export const createUrqlClient = (ssrExchange: any, ctx: any) => {
+  let cookie;
+
+  if (isServer()) {
+    // solves problem (together with "fetchOptions") of missing cookie (userId) when the first request is ssr
+    // handling browser request by express midlewares adds missing cokie to headers
+    cookie = ctx.req.headers.cookie;
+  }
+...
+    fetchOptions: {
+      ...
+      headers: cookie ? { cookie, } : undefined
+    },
+...
+
+2.
+
+// there was:
+
+export const NavBar: React.FC<NavBarProps> = (props) => {
+    ...
+  const [{ data, fetching }] = useQuery({
+    query: MeDocument,
+    pause: isServer(),
+  });
+
+// now "pause" is unnecessary hence:
+
+export const NavBar: React.FC<NavBarProps> = (props) => {
+    ...
+  const [{ data, fetching }] = useQuery({
+    query: MeDocument
+  });
+
+// but we will leave it as it was: 
+
+export const NavBar: React.FC<NavBarProps> = (props) => {
+    ...
+  const [{ data, fetching }] = useQuery({
+    query: MeDocument,
+    pause: isServer(),
+  });

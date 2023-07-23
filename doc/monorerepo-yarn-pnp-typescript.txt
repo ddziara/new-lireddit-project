@@ -3,7 +3,8 @@ yarn init -w                    # initialize for workspace
 yarn add -D typescript          # add typescript before next step (vscode integration)
 yarn dlx @yarnpkg/sdks vscode   # only SDKs for tools present in package.json (typescript in this case) will be installed !!!
 
-# add the following tsconfig.json in root workspace:
+//=======================================================================================================================================
+# add the following tsconfig.json in root workspace: (??? - see https://www.typescriptlang.org/docs/handbook/project-references.html)
 
 {
   "exclude": ["packages/**/__tests__/**", "packages/**/dist/**"],

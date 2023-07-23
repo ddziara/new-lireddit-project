@@ -18,11 +18,15 @@ import {
   RegularUserFragment,
   RegularUserFragmentDoc,
   RegularUserResponseFragmentDoc,
+  VoteMutationVariables,
 } from "../gql/graphql";
 import { useFragment } from "../gql";
 import { pipe, tap } from "wonka";
 import Router from "next/router";
 import { FragmentDefinitionNode } from "@0no-co/graphql.web";
+import { gql } from "@urql/core";
+import { devtoolsExchange } from "@urql/devtools";
+import { isServer } from "./isServer";
 
 export const errorExchange: Exchange =
   ({ forward }) =>
@@ -64,7 +68,7 @@ export const cursorPagination = (): Resolver<any, any, any> => {
       const data = cache.resolve(key, "posts") as string[];
       const _hasMore = cache.resolve(key, "hasMore") as boolean;
 
-      if(!_hasMore) {
+      if (!_hasMore) {
         hasMore = false;
       }
 
@@ -131,97 +135,173 @@ export const cursorPagination = (): Resolver<any, any, any> => {
   };
 };
 
-export const createUrqlClient = (ssrExchange: any) => ({
-  url: "http://192.168.0.8:4000/graphql",
-  exchanges: [
-    cacheExchange({
-      keys: {
-        PaginatedPosts: () => null,
-      },
-      resolvers: {
-        Query: {
-          posts: cursorPagination(),
+export const createUrqlClient = (ssrExchange: any, ctx: any) => {
+  let cookie;
+
+  if (isServer()) {
+    // solves problem (together with "fetchOptions") of missing cookie (userId) when the first request is ssr
+    // handling browser request by express midlewares adds missing cokie to headers
+    cookie = ctx.req.headers.cookie;
+  }
+
+  return {
+    url: "http://192.168.0.8:4000/graphql",
+    exchanges: [
+      devtoolsExchange,
+      cacheExchange({
+        keys: {
+          PaginatedPosts: () => null,
         },
-      },
-      updates: {
-        Mutation: {
-          logout: (result: LogoutMutation, args, cache, info) => {
-            cache.updateQuery({ query: MeDocument }, () => {
-              return {
-                me: null,
-              };
-            });
-          },
-          login: (result: LoginMutation, args, cache, info) => {
-            cache.updateQuery({ query: MeDocument }, (data: MeQuery | null) => {
-              const regularUserResponseFragmentDoc = useFragment(
-                RegularUserResponseFragmentDoc,
-                result.login
-              );
-
-              let errors: readonly RegularErrorFragment[] | null | undefined;
-              let user: RegularUserFragment | null | undefined;
-
-              if (regularUserResponseFragmentDoc) {
-                errors = useFragment(
-                  RegularErrorFragmentDoc,
-                  regularUserResponseFragmentDoc.errors
-                );
-
-                user = useFragment(
-                  RegularUserFragmentDoc,
-                  regularUserResponseFragmentDoc.user
-                );
-              }
-
-              if (errors) {
-                return data;
-              } else {
-                return {
-                  me: user,
-                };
-              }
-            });
-          },
-          register: (result: RegisterMutation, args, cache, info) => {
-            cache.updateQuery({ query: MeDocument }, (data: MeQuery | null) => {
-              const regularUserResponseFragmentDoc = useFragment(
-                RegularUserResponseFragmentDoc,
-                result.register
-              );
-
-              let errors: readonly RegularErrorFragment[] | null | undefined;
-              let user: RegularUserFragment | null | undefined;
-
-              if (regularUserResponseFragmentDoc) {
-                errors = useFragment(
-                  RegularErrorFragmentDoc,
-                  regularUserResponseFragmentDoc.errors
-                );
-
-                user = useFragment(
-                  RegularUserFragmentDoc,
-                  regularUserResponseFragmentDoc.user
-                );
-              }
-
-              if (errors) {
-                return data;
-              } else {
-                return {
-                  me: user,
-                };
-              }
-            });
+        resolvers: {
+          Query: {
+            posts: cursorPagination(),
           },
         },
-      },
-    }),
-    errorExchange /* probably should be before fetchExchange */,
-    ssrExchange,
-    fetchExchange,
-  ],
-  fetchOptions: {
-    credentials: "include" as const,
-  },
-});
+        updates: {
+          Mutation: {
+            vote: (result: LogoutMutation, args, cache, info) => {
+              const { postId, value } = args as VoteMutationVariables;
+              console.log("cache update: vote(): ", { postId, value });
+
+              const data = cache.readFragment<{
+                id: number;
+                points?: number;
+                voteStatus?: number;
+              }>(
+                gql`
+                  fragment _ on Post {
+                    id
+                    points
+                    voteStatus
+                  }
+                `,
+                { id: postId }
+              );
+              console.log("data: ", data);
+
+              if (data) {
+                if (data.voteStatus === value) {
+                  return;
+                }
+
+                const newPoints =
+                  data.points! + (!data.voteStatus ? 1 : 2) * value;
+                console.log("newPoints: ", newPoints);
+                cache.writeFragment(
+                  gql`
+                    fragment _ on Post {
+                      points
+                      voteStatus
+                    }
+                  `,
+                  { id: postId, points: newPoints, voteStatus: value }
+                );
+              }
+            },
+            createPost: (result: LogoutMutation, args, cache, info) => {
+              // inspecting chache:  console.log(cache.inspectFields("Query"));
+
+              const allFields = cache.inspectFields("Query");
+              const fieldInfoes = allFields.filter(
+                (info) => info.fieldName === "posts"
+              );
+
+              fieldInfoes.forEach((fi) => {
+                cache.invalidate("Query", "posts", fi.arguments);
+              });
+              // console.log("==>", cache.inspectFields("Query"));
+            },
+            logout: (result: LogoutMutation, args, cache, info) => {
+              cache.updateQuery({ query: MeDocument }, () => {
+                return {
+                  me: null,
+                };
+              });
+            },
+            login: (result: LoginMutation, args, cache, info) => {
+              cache.updateQuery(
+                { query: MeDocument },
+                (data: MeQuery | null) => {
+                  const regularUserResponse = useFragment(
+                    RegularUserResponseFragmentDoc,
+                    result.login
+                  );
+
+                  let errors:
+                    | readonly RegularErrorFragment[]
+                    | null
+                    | undefined;
+                  let user: RegularUserFragment | null | undefined;
+
+                  if (regularUserResponse) {
+                    errors = useFragment(
+                      RegularErrorFragmentDoc,
+                      regularUserResponse.errors
+                    );
+
+                    user = useFragment(
+                      RegularUserFragmentDoc,
+                      regularUserResponse.user
+                    );
+                  }
+
+                  if (errors) {
+                    return data;
+                  } else {
+                    return {
+                      me: user,
+                    };
+                  }
+                }
+              );
+            },
+            register: (result: RegisterMutation, args, cache, info) => {
+              cache.updateQuery(
+                { query: MeDocument },
+                (data: MeQuery | null) => {
+                  const regularUserResponse = useFragment(
+                    RegularUserResponseFragmentDoc,
+                    result.register
+                  );
+
+                  let errors:
+                    | readonly RegularErrorFragment[]
+                    | null
+                    | undefined;
+                  let user: RegularUserFragment | null | undefined;
+
+                  if (regularUserResponse) {
+                    errors = useFragment(
+                      RegularErrorFragmentDoc,
+                      regularUserResponse.errors
+                    );
+
+                    user = useFragment(
+                      RegularUserFragmentDoc,
+                      regularUserResponse.user
+                    );
+                  }
+
+                  if (errors) {
+                    return data;
+                  } else {
+                    return {
+                      me: user,
+                    };
+                  }
+                }
+              );
+            },
+          },
+        },
+      }),
+      errorExchange /* probably should be before fetchExchange */,
+      ssrExchange,
+      fetchExchange,
+    ],
+    fetchOptions: {
+      credentials: "include" as const,
+      headers: cookie ? { cookie, } : undefined
+    },
+  };
+};

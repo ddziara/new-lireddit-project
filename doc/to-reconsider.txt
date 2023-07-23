@@ -1,0 +1,12 @@
+1. 
+app:      web
+location: createUrqlClient.ts
+
+      resolvers: {
+        Query: {
+          posts: cursorPagination(),
+        },
+      },
+===========================================================
+
+2. Session mechanism, when is userId set?

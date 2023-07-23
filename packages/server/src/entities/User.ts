@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import { Post } from "./Post";
+import { Updoot } from "./Updoot";
 
 @ObjectType()
 @Entity({ schema: "public" })
@@ -31,6 +32,9 @@ export class User extends BaseEntity {
   @OneToMany(() => Post, (post: Post) => post.creator)
   posts!: Post[];
 
+  @OneToMany(() => Updoot, updoot => updoot.user)
+  updoots!: Updoot[];
+
   @Field()
   @CreateDateColumn()
   createdAt: Date = new Date();
@@ -38,4 +42,4 @@ export class User extends BaseEntity {
   @Field()
   @UpdateDateColumn()
   updatedAt: Date = new Date();
-}
+} 

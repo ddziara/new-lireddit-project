@@ -1,21 +1,11 @@
 import React, { useEffect } from "react";
-import { Wrapper } from "../components/Wrapper";
 import { Button, Box } from "@chakra-ui/react";
 import { Formik, Form } from "formik";
 import { useRouter } from "next/router";
 import { InputField } from "../components/InputField";
-import { useFragment } from "../gql";
 import {
-  RegularUserResponseFragmentDoc,
-  RegularErrorFragment,
-  RegularUserFragment,
-  RegularErrorFragmentDoc,
-  RegularUserFragmentDoc,
   CreatePostDocument,
-  MeDocument,
 } from "../gql/graphql";
-import { toErrorMap } from "../utils/toErrorMap";
-import login from "./login";
 import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import { useMutation, useQuery } from "urql";

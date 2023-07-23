@@ -35,7 +35,7 @@ export const ChangePassword: NextPage<{}> = () => {
             token: typeof router.query.token === "string" ? router.query.token : "",
           }); // returning Promise to avoid forever spinning on Submit button
 
-          const regularUserResponseFragmentDoc = useFragment(
+          const regularUserResponse = useFragment(
             RegularUserResponseFragmentDoc,
             response.data?.changePassword
           );
@@ -43,15 +43,15 @@ export const ChangePassword: NextPage<{}> = () => {
           let errors: readonly RegularErrorFragment[] | null | undefined;
           let user: RegularUserFragment | null | undefined;
 
-          if (regularUserResponseFragmentDoc) {
+          if (regularUserResponse) {
             errors = useFragment(
               RegularErrorFragmentDoc,
-              regularUserResponseFragmentDoc.errors
+              regularUserResponse.errors
             );
 
             user = useFragment(
               RegularUserFragmentDoc,
-              regularUserResponseFragmentDoc.user
+              regularUserResponse.user
             );
           }
 
