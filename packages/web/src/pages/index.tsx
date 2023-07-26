@@ -1,8 +1,3 @@
-import { withUrqlClient } from "next-urql";
-import { createUrqlClient } from "../utils/createUrqlClient";
-import { useQuery } from "urql";
-import { PostsDocument, PostSnippetFragmentDoc } from "../gql/graphql";
-import { Layout } from "../components/Layout";
 import {
   Box,
   Button,
@@ -12,10 +7,21 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
+import { withUrqlClient } from "next-urql";
 import NextLink from "next/link";
 import { useState } from "react";
-import { useFragment } from "../gql";
+import { useQuery } from "urql";
+import { EditDeletePostsButtons } from "../components/EditDeletePostsButtons";
+import { Layout } from "../components/Layout";
 import { UpdootSection } from "../components/UpdootSection";
+import { useFragment } from "../gql";
+import {
+  MeDocument,
+  PostSnippetFragmentDoc,
+  PostsDocument,
+  RegularUserFragmentDoc,
+} from "../gql/graphql";
+import { createUrqlClient } from "../utils/createUrqlClient";
 import { isServer } from "../utils/isServer";
 
 const Index = () => {
@@ -33,31 +39,36 @@ const Index = () => {
     return <div>you got query failed for some reasons</div>;
   }
 
-  console.log(isServer() ? "...Index rendering on server" : "...Index rendering on client")
+  console.log(
+    isServer() ? "...Index rendering on server" : "...Index rendering on client"
+  );
 
   return (
     <Layout>
-      <Flex align="center">
-        <Heading>LiReddit</Heading>
-        <Link ml="auto" as={NextLink} href="/create-post">
-          create post
-        </Link>
-      </Flex>
-      <br />
       {!data && fetching ? (
         <div>loading...</div>
       ) : (
         <Stack spacing={8}>
           {data!.posts.posts.map((p) => {
             const postSnippet = useFragment(PostSnippetFragmentDoc, p);
+            // console.log("p: ", p);
 
-            return (
+            return !p ? null : (
               <Flex key={postSnippet.id} p={5} shadow="md" borderWidth="1px">
                 <UpdootSection post={postSnippet} />
-                <Box>
-                  <Heading fontSize="xl">{postSnippet.title}</Heading>
+                <Box flex={1}>
+                  <Link as={NextLink} href={`/post/${postSnippet.id}`}>
+                    <Heading fontSize="xl">{postSnippet.title}</Heading>
+                  </Link>
                   <Text>posted by {postSnippet.creator.user}</Text>
-                  <Text mt={4}>{postSnippet.textSnippet}</Text>
+                  <Flex align="center">
+                    <Text flex={1} mt={4}>
+                      {postSnippet.textSnippet}
+                    </Text>
+                      <Box ml="auto">
+                        <EditDeletePostsButtons id={postSnippet.id} creatorId={postSnippet.creator.id} />
+                      </Box>
+                  </Flex>
                 </Box>
               </Flex>
             );
@@ -68,7 +79,10 @@ const Index = () => {
         <Flex>
           <Button
             onClick={() => {
-              const postSnippet = useFragment(PostSnippetFragmentDoc, data.posts.posts[data.posts.posts.length - 1]);
+              const postSnippet = useFragment(
+                PostSnippetFragmentDoc,
+                data.posts.posts[data.posts.posts.length - 1]
+              );
 
               setVariables({
                 limit: variables.limit,

@@ -8,6 +8,7 @@ import {
 } from "urql";
 import { Resolver, cacheExchange } from "@urql/exchange-graphcache";
 import {
+  DeletePostMutationVariables,
   LoginMutation,
   LogoutMutation,
   MeDocument,
@@ -141,7 +142,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
   if (isServer()) {
     // solves problem (together with "fetchOptions") of missing cookie (userId) when the first request is ssr
     // handling browser request by express midlewares adds missing cokie to headers
-    cookie = ctx.req.headers.cookie;
+    cookie = ctx?.req?.headers?.cookie;
   }
 
   return {
@@ -159,6 +160,12 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
         },
         updates: {
           Mutation: {
+            deletePost: (result: LogoutMutation, args, cache, info) => {
+              cache.invalidate({
+                __typename: "Post",
+                id: (args as DeletePostMutationVariables).id,
+              });
+            },
             vote: (result: LogoutMutation, args, cache, info) => {
               const { postId, value } = args as VoteMutationVariables;
               console.log("cache update: vote(): ", { postId, value });
@@ -301,7 +308,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
     ],
     fetchOptions: {
       credentials: "include" as const,
-      headers: cookie ? { cookie, } : undefined
+      headers: cookie ? { cookie } : undefined,
     },
   };
 };

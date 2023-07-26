@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Hide, Link } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Hide, Link } from "@chakra-ui/react";
 import React from "react";
 import NextLink from "next/link";
 import {
@@ -22,13 +22,13 @@ export const NavBar: React.FC<NavBarProps> = (props) => {
 
   // https://stackoverflow.com/questions/65492456/while-turining-on-ssr-in-urql-clint-im-geting-the-below-error-did-not-expect-se
   //
-  // Instead of if (fetching) { }, add the useRouter hook: const { isReady } = useRouter();
-  // and write if (fetching || !isReady) { }. This is some router issue with next.js
-  const { isReady } = useRouter();
+  // The problem is that the MeQuery is paused for SSR and therefore the userInfoBody is being setup incorrectly 
+  // before the client renders it after receiving the user data. Simple fix is to use the same isServer check on 
+  // the userInfoBody setup:
 
   let body = null;
 
-  if (fetching && !isReady) {
+  if (isServer() || fetching) {
     // data is loading
   } else if (!data?.me) {
     // user not logged in
@@ -47,7 +47,12 @@ export const NavBar: React.FC<NavBarProps> = (props) => {
 
     // user is logged in
     body = (
-      <Flex>
+      <Flex align="center">
+        <Button ml="auto" mr={4}>
+          <Link as={NextLink} href="/create-post">
+            create post
+          </Link>
+        </Button>
         <Box mr={2}>{regularUser.user}</Box>
         <Button
           variant="link"
@@ -64,7 +69,12 @@ export const NavBar: React.FC<NavBarProps> = (props) => {
 
   return (
     <Flex bg="tan" p={4}>
-      <Box ml="auto">{body}</Box>
+      <Flex flex={1} m='auto' maxWidth={800} align="center">
+        <Link as={NextLink} href="/">
+          <Heading>LiReddit</Heading>
+        </Link>
+        <Box ml="auto">{body}</Box>
+      </Flex>
     </Flex>
   );
 };

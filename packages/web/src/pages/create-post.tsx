@@ -16,7 +16,7 @@ const CreatePost: React.FC<{}> = ({}) => {
   const router = useRouter();
   const [fetching] = useIsAuth();
   const [, createPost] = useMutation(CreatePostDocument);
-
+ 
   return !fetching ? (
     <Layout variant="small">
       <Formik

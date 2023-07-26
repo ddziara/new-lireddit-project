@@ -1,4 +1,4 @@
-mutation createPost($input: PostInput!) {
+mutation CreatePost($input: PostInput!) {
   createPost(input: $input) {
     updatedAt
     title

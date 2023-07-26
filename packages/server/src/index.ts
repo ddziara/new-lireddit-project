@@ -86,7 +86,7 @@ const main = async () => {
 
   // TEST
 const myLogger = function (req: Request, res: Response, next: NextFunction) {
-  console.log("LOGGED: body: ", req.body, ", req.session.userId: ", (req as any).session.userId)
+  // console.log("LOGGED: body: ", req.body, ", req.session.userId: ", (req as any).session.userId)
   next()
 }
 
