@@ -39,9 +39,9 @@ const Index = () => {
     return <div>you got query failed for some reasons</div>;
   }
 
-  console.log(
-    isServer() ? "...Index rendering on server" : "...Index rendering on client"
-  );
+  // console.log(
+  //   isServer() ? "...Index rendering on server" : "...Index rendering on client"
+  // );
 
   return (
     <Layout>
