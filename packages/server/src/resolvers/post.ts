@@ -17,6 +17,7 @@ import {
 } from "type-graphql";
 import { isAuth } from "../middleware/isAuth";
 import { Updoot } from "../entities/Updoot";
+import { User } from "../entities/User";
 
 @InputType()
 class PostInput {
@@ -38,8 +39,14 @@ class PaginatedPosts {
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String)
-  textSnippet(@Root() root: Post) {
-    return root.text.slice(0, 50);
+  textSnippet(@Root() post: Post) {
+    return post.text.slice(0, 50);
+  }
+
+  @FieldResolver(() => User)
+  creator(@Root() post: Post) {
+    const ret = User.findOneBy({ id: post.creatorId });
+    return ret;
   }
 
   @Mutation(() => Boolean)
@@ -48,15 +55,15 @@ export class PostResolver {
     @Arg("postId", () => Int) postId: number,
     @Arg("value", () => Int) value: number,
     @Ctx() { req, AppDataSource }: MyContext
-  ) { 
+  ) {
     const isUpdoot = value !== -1;
     const realValue = isUpdoot ? 1 : -1;
     const { userId } = req!.session;
 
     await AppDataSource!.transaction(async (transactionalEntityManager) => {
       const updoot = await Updoot.findOneBy({ postId, userId });
- 
-      // the user has voted on the post before 
+
+      // the user has voted on the post before
       // and he's changing his vote
       if (updoot && updoot.value !== realValue) {
         transactionalEntityManager.query(
@@ -105,8 +112,8 @@ WHERE p.id = $2
 
     const replacements: any[] = [realLimitPlusOne];
 
-    if(req?.session.userId) {
-      replacements.push(req!.session.userId)
+    if (req?.session.userId) {
+      replacements.push(req!.session.userId);
     }
 
     let cursorIndx = 3;
@@ -119,16 +126,12 @@ WHERE p.id = $2
     const posts = (await AppDataSource!.query(
       `
     SELECT p.*, 
-    json_build_object(
-      'id', u.id,
-      'user', u.user,
-      'email', u.email,
-      'createdAt', u."createdAt",
-      'updatedAt', u."updatedAt"
-      ) creator,
-      ${req?.session.userId ? `(SELECT value FROM updoot WHERE "userId" = $2 AND "postId" = p.id) "voteStatus"` : 'null as "voteStatus"'}
+      ${
+        req?.session.userId
+          ? `(SELECT value FROM updoot WHERE "userId" = $2 AND "postId" = p.id) "voteStatus"`
+          : 'null as "voteStatus"'
+      }
     FROM post p
-    INNER JOIN public.user u ON u.id = p."creatorId"
     ${cursor ? `WHERE p."createdAt" < ${cursorIndx}` : ""}
     ORDER BY p."createdAt" DESC
     LIMIT $1
@@ -136,7 +139,7 @@ WHERE p.id = $2
       replacements
     )) as unknown as [];
     // console.log("GraphQL 'posts' query req?.session: ", req?.session)
-// console.log("posts: ", posts)
+    // console.log("posts: ", posts)
     // const qb = AppDataSource!
     //   .getRepository(Post)
     //   .createQueryBuilder("p") // "p" is an alias of table "posts"
@@ -160,11 +163,6 @@ WHERE p.id = $2
     // const posts = await qb.getMany();
     // console.log("posts: ", posts)
 
-    posts.forEach((val: any) => {
-      val["creator"]["createdAt"] = new Date(val["creator"]["createdAt"]);
-      val["creator"]["updatedAt"] = new Date(val["creator"]["updatedAt"]);
-    });
-
     return {
       posts: posts.slice(0, realLimit),
       hasMore: posts.length === realLimitPlusOne,
@@ -173,7 +171,7 @@ WHERE p.id = $2
 
   @Query(() => Post, { nullable: true })
   post(@Arg("id", () => Int) id: number): Promise<Post | null> {
-    return Post.findOne({ where: { id }, relations: ["creator"] });
+    return Post.findOne({ where: { id } });
   }
 
   @Mutation(() => Post)
@@ -191,22 +189,28 @@ WHERE p.id = $2
     @Arg("id", () => Int) id: number,
     @Arg("title") title: string,
     @Arg("text") text: string,
-    @Ctx() {req, AppDataSource} : MyContext
+    @Ctx() { req, AppDataSource }: MyContext
   ): Promise<Post | null> {
     const result = await AppDataSource!
-    .createQueryBuilder()
-    .update(Post)
-    .set({title, text})
-    .where('id = :id AND "creatorId" = :creatorId', { id, creatorId: req!.session.userId })
-    .returning("*")
-    .execute();
+      .createQueryBuilder()
+      .update(Post)
+      .set({ title, text })
+      .where('id = :id AND "creatorId" = :creatorId', {
+        id,
+        creatorId: req!.session.userId,
+      })
+      .returning("*")
+      .execute();
 
-    return result.raw[0]
+    return result.raw[0];
   }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
-  async deletePost(@Arg("id", () => Int) id: number, @Ctx() {req, AppDataSource}: MyContext ): Promise<boolean> { 
+  async deletePost(
+    @Arg("id", () => Int) id: number,
+    @Ctx() { req, AppDataSource }: MyContext
+  ): Promise<boolean> {
     // not cascade way
     // await AppDataSource!.transaction(async (em) => {
     //   const post = await Post.findOneBy({ id });
@@ -214,13 +218,13 @@ WHERE p.id = $2
     //   if(!post) {
     //     return false;
     //   }
-  
+
     //   if(post.creatorId !== req!.session.userId) {
     //     throw new Error("not authorized");
     //   }
-  
+
     //   await Updoot.delete({ postId: id });
-    //   await Post.delete({ id });  
+    //   await Post.delete({ id });
     // });
 
     // cascade way
