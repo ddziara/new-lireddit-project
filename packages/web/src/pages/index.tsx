@@ -30,13 +30,18 @@ const Index = () => {
     cursor: string | null;
   }>({ limit: 15, cursor: null });
 
-  const [{ data, fetching }] = useQuery({
+  const [{ data, error, fetching }] = useQuery({
     query: PostsDocument,
     variables,
   });
 
   if (!fetching && !data) {
-    return <div>you got query failed for some reasons</div>;
+    return (
+      <div>
+        <div>you got query failed for some reasons</div>
+        <div>{error?.message}</div>
+      </div>
+    );
   }
 
   // console.log(
@@ -65,9 +70,12 @@ const Index = () => {
                     <Text flex={1} mt={4}>
                       {postSnippet.textSnippet}
                     </Text>
-                      <Box ml="auto">
-                        <EditDeletePostsButtons id={postSnippet.id} creatorId={postSnippet.creator.id} />
-                      </Box>
+                    <Box ml="auto">
+                      <EditDeletePostsButtons
+                        id={postSnippet.id}
+                        creatorId={postSnippet.creator.id}
+                      />
+                    </Box>
                   </Flex>
                 </Box>
               </Flex>

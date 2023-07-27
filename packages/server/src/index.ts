@@ -22,6 +22,7 @@ import path from "node:path";
 import dotenv from "dotenv";
 import { Updoot } from "./entities/Updoot";
 import util from "node:util";
+import { createUserLoader } from "./utils/createUserLoader";
 
 dotenv.config();
 
@@ -81,17 +82,17 @@ const main = async () => {
       resave: false, // required: force lightweight session keep alive (touch)
       saveUninitialized: false, // recommended: only save session when data exists
       secret: process.env.SESSION_SECRET!,
-    }) 
+    })
   );
 
   // TEST
-const myLogger = function (req: Request, res: Response, next: NextFunction) {
-  // console.log("LOGGED: body: ", req.body, ", req.session.userId: ", (req as any).session.userId)
-  next()
-}
+  const myLogger = function (req: Request, res: Response, next: NextFunction) {
+    // console.log("LOGGED: body: ", req.body, ", req.session.userId: ", (req as any).session.userId)
+    next();
+  };
 
   // TEST END
- 
+
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [HelloResolver, PostResolver, UserResolver],
@@ -110,7 +111,7 @@ const myLogger = function (req: Request, res: Response, next: NextFunction) {
     json(),
     myLogger as any,
     expressMiddleware(apolloServer, {
-      context: async ({ req, res }): Promise<MyContext> => { 
+      context: async ({ req, res }): Promise<MyContext> => {
         // TEST
         // if(!util.types.isProxy(req)) {
         //   console.log("=========================================================>")
@@ -120,15 +121,17 @@ const myLogger = function (req: Request, res: Response, next: NextFunction) {
 
         //   }})
         // }
-        // console.log("In context function: req.session: ", req.session); 
+        // console.log("In context function: req.session: ", req.session);
         // END TEST
-        
-        return ({
-        req,
-        res,
-        redisClient,
-        AppDataSource,
-      })   },
+
+        return {
+          req,
+          res,
+          redisClient,
+          AppDataSource,
+          userLoader: createUserLoader(),
+        };
+      },
     })
   );
 
