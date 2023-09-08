@@ -1,45 +1,25 @@
-import "reflect-metadata";
-import { COOKIE_NAME, __prod__ } from "./constants";
-import express, { NextFunction } from "express";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
-import { buildSchema } from "type-graphql";
-import { HelloResolver } from "./resolvers/hello";
-import { json } from "body-parser";
-import { PostResolver } from "./resolvers/post";
-import { MyContext } from "./types";
-import http from "http";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
-import { UserResolver } from "./resolvers/user";
+import { json } from "body-parser";
 import RedisStore from "connect-redis";
-import session from "express-session";
-import { createClient } from "redis";
 import cors from "cors";
-import { DataSource } from "typeorm";
-import { User } from "./entities/User";
-import { Post } from "./entities/Post";
-import path from "node:path";
-import dotenv from "dotenv";
-import { Updoot } from "./entities/Updoot";
-import util from "node:util";
+import express, { NextFunction } from "express";
+import session from "express-session";
+import http from "http";
+import { createClient } from "redis";
+import "reflect-metadata";
+import { buildSchema } from "type-graphql";
+import { AppDataSource } from "./app-data-source";
+import { COOKIE_NAME, __prod__ } from "./constants";
+import { HelloResolver } from "./resolvers/hello";
+import { PostResolver } from "./resolvers/post";
+import { UserResolver } from "./resolvers/user";
+import { MyContext } from "./types";
+import { createUpdootLoader } from "./utils/createUpdootLoader";
 import { createUserLoader } from "./utils/createUserLoader";
 
-dotenv.config();
-
 const main = async () => {
-  const AppDataSource = new DataSource({
-    type: "postgres",
-    database: process.env.DB_DATABASE,
-    host: process.env.DB_HOST,
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    logging: "all",
-    synchronize:
-      true /* schema should be created on every app. launch; only useful during debugging and development */,
-    migrations: [path.join(__dirname, "./migrations/*")],
-    entities: [Post, User, Updoot],
-  });
-
   await AppDataSource.initialize();
   await AppDataSource.runMigrations();
 
@@ -130,6 +110,7 @@ const main = async () => {
           redisClient,
           AppDataSource,
           userLoader: createUserLoader(),
+          updootLoader: createUpdootLoader(),
         };
       },
     })

@@ -48,6 +48,17 @@ export class PostResolver {
     return userLoader.load(post.creatorId);
   }
 
+  @FieldResolver(() => Int, {nullable: true})
+  async voteStatus(@Root() post: Post, @Ctx() { updootLoader, req }: MyContext) {
+    if(!req?.session.userId) {
+      return null;
+    }
+
+    const updoot = await updootLoader.load({postId: post.id, userId: req?.session.userId});
+
+    return updoot ? updoot.value : null;
+  }
+
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async vote(
@@ -111,56 +122,20 @@ WHERE p.id = $2
 
     const replacements: any[] = [realLimitPlusOne];
 
-    if (req?.session.userId) {
-      replacements.push(req!.session.userId);
-    }
-
-    let cursorIndx = 3;
-
     if (cursor) {
       replacements.push(new Date(cursor));
-      cursorIndx = replacements.length;
     }
 
     const posts = (await AppDataSource!.query(
       `
-    SELECT p.*, 
-      ${
-        req?.session.userId
-          ? `(SELECT value FROM updoot WHERE "userId" = $2 AND "postId" = p.id) "voteStatus"`
-          : 'null as "voteStatus"'
-      }
+    SELECT p.* 
     FROM post p
-    ${cursor ? `WHERE p."createdAt" < ${cursorIndx}` : ""}
+    ${cursor ? `WHERE p."createdAt" < $2` : ""}
     ORDER BY p."createdAt" DESC
     LIMIT $1
     `,
       replacements
     )) as unknown as [];
-    // console.log("GraphQL 'posts' query req?.session: ", req?.session)
-    // console.log("posts: ", posts)
-    // const qb = AppDataSource!
-    //   .getRepository(Post)
-    //   .createQueryBuilder("p") // "p" is an alias of table "posts"
-    //   .innerJoin(
-    //     "p.creator", // table (see: entity Post, ManyToOne())
-    //     "u", // alias
-    //     'u.id = p."creatorId"' // condition
-    //   )
-    //   .select(['p.id', 'p.createdAt', 'p.updatedAt', 'p.title', 'p.points', 'p.creatorId', 'p.text'])
-    //   .addSelect(`json_build_object('u.user', u.user)`, 'creator')
-    //   .orderBy('p.createdAt', "DESC") // this is for PostgreSQL to have upper case letters in column names
-    //   .take(realLimitPlusOne);
-
-    // if (cursor) {
-    //   qb.where('p.createdAt < :cursor', {
-    //     cursor: new Date(cursor),
-    //   });
-    // }
-
-    // console.log("qb: ", qb.getQuery())
-    // const posts = await qb.getMany();
-    // console.log("posts: ", posts)
 
     return {
       posts: posts.slice(0, realLimit),

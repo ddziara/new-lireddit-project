@@ -14,6 +14,7 @@ import { useRouter } from "next/router";
 interface NavBarProps {}
 
 export const NavBar: React.FC<NavBarProps> = (props) => {
+  const router = useRouter();
   const [{ fetching: logoutFetching }, logout] = useMutation(LogoutDocument);
   const [{ data, fetching }] = useQuery({
     query: MeDocument,
@@ -56,8 +57,9 @@ export const NavBar: React.FC<NavBarProps> = (props) => {
         <Box mr={2}>{regularUser.user}</Box>
         <Button
           variant="link"
-          onClick={() => {
-            logout({});
+          onClick={async () => {
+            await logout({});
+            router.reload();
           }}
           isLoading={logoutFetching}
         >
