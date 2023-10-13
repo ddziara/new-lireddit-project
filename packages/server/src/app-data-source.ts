@@ -3,9 +3,10 @@ import { Updoot } from "./entities/Updoot";
 import { User } from "./entities/User";
 import { DataSource } from "typeorm";
 import path from "node:path";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 
-dotenv.config();
+// dotenv.config();
+console.log("################################### ", process.env.DB_DATABASE);
 
 export const AppDataSource = new DataSource({
   type: "postgres",

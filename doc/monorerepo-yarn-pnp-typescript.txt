@@ -4,6 +4,7 @@ yarn add -D typescript          # add typescript before next step (vscode integr
 yarn dlx @yarnpkg/sdks vscode   # only SDKs for tools present in package.json (typescript in this case) will be installed !!!
 
 //=======================================================================================================================================
+# Note: not sure if the following is the case, not sure if this is necessary
 # add the following tsconfig.json in root workspace: (??? - see https://www.typescriptlang.org/docs/handbook/project-references.html)
 
 {
