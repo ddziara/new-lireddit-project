@@ -1,0 +1,38 @@
+1. On digitalocen create dokku (marketplace) droplet (VPS - Virtual Private Server)
+
+2. ssh to it
+
+3. create app
+
+  dokku apps:create api
+
+3. create backend service (Postgres)
+
+  sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git
+
+4. create postgres service
+
+  dokku postgres:create hummus
+
+5. link postgres service to app
+
+  dokku postgres:link hummus api
+
+6. create backend service (Redis)
+
+  sudo dokku plugin:install https://github.com/dokku/dokku-redis.git
+
+8. create redis service 
+
+  dokku redis:create olive
+
+9. link redis service to app
+
+  dokku redis:link olive api
+
+10. listing docker containers
+
+root@dokku0306onubuntu2204-s-1vcpu-1gb-fra1-01:~# docker container list
+CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS          PORTS      NAMES
+b4be011fe29c   redis:7.2.1     "docker-entrypoint.s…"   3 minutes ago    Up 3 minutes    6379/tcp   dokku.redis.olive
+77e1dad3572b   postgres:16.0   "docker-entrypoint.s…"   13 minutes ago   Up 13 minutes   5432/tcp   dokku.postgres.hummus

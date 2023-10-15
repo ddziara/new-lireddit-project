@@ -1,0 +1,10 @@
+sudo docker build -t ddziara/lireddit --build-arg BUILD_CONTEXT=server  .
+sudo docker build -t ddziara/lireddit --build-arg BUILD_CONTEXT=server --no-cache .
+sudo docker build -t ddziara/lireddit --build-arg BUILD_CONTEXT=server --progress=plain .
+sudo docker build -t ddziara/lireddit --build-arg BUILD_CONTEXT=server --progress=plain --no-cache .
+
+Troubleshooting
+
+  Connect to the last successful container: 
+
+    docker run --rm -it <container-id> bash
