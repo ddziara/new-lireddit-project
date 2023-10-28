@@ -1,0 +1,20 @@
+https://www.namecheap.com/    - free DNS hosting
+
+https://www.noip.com/
+
+statlertronikdokku.hopto.org
+
+https://alternativeto.net/software/duck-dns/about/
+
+
+https://www.duckdns.org/ (sign in with Google)
+
+lireddit.duckdns.org                // <======= is this better because with subdomain? Likely this is a domain with A record referring IP address
+
+gogs-statlertronik.duckdns.org
+
+
+https://www.whatsmydns.net/ to check DNS data propagation
+
+
+

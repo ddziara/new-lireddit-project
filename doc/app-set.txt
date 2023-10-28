@@ -1,0 +1,79 @@
+app.set(name, value)
+
+Assigns setting name to value. You may store any value that you want, 
+but certain names can be used to configure the behavior of the server.
+
+"trust proxy"         Indicates the app is behind a front-facing proxy, and to use the X-Forwarded-* headers 
+                      to determine the connection and the IP address of the client. NOTE: X-Forwarded-* headers 
+                      are easily spoofed and the detected IP addresses are unreliable.
+
+                      When enabled, Express attempts to determine the IP address of the client connected through 
+                      the front-facing proxy, or series of proxies. The `req.ips` property, then contains an array 
+                      of IP addresses the client is connected through. To enable it, use the values described in 
+                      the trust proxy options table.
+
+                      The `trust proxy` setting is implemented using the proxy-addr package. For more information, 
+                      see its documentation.
+
+                      NOTE: Sub-apps will inherit the value of this setting, even though it has a default value.
+
+NOTE: Sub-apps will inherit the value of this setting, even though it has a default value.
+
+"trust proxy" may be 
+
+Boolean               If true, the client’s IP address is understood as the left-most entry in the X-Forwarded-For header.
+                      If false, the app is understood as directly facing the client and the client’s IP address is derived from
+                      req.socket.remoteAddress. This is the default setting.
+
+                      -----------------------------------------------------------------
+                      When setting to true, it is important to ensure that the last reverse proxy trusted is 
+                      removing/overwriting all of the following HTTP headers: X-Forwarded-For, X-Forwarded-Host, 
+                      and X-Forwarded-Proto otherwise it may be possible for the client to provide any value.
+                      -----------------------------------------------------------------
+
+IP addresses          An IP address, subnet, or an array of IP addresses and subnets to trust as being a reverse proxy. 
+                      The following list shows the pre-configured subnet names:
+
+                        * loopback - 127.0.0.1/8, ::1/128
+                        * linklocal - 169.254.0.07/16, fe80::/10
+                        * uniquelocal - 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7
+                       
+                      You can set IP addresses in any of the following ways:
+
+                        app.set('trust proxy', 'loopback') // specify a single subnet
+                        app.set('trust proxy', 'loopback, 123.123.123.123') // specify a subnet and an address
+                        app.set('trust proxy', 'loopback, linklocal, uniquelocal') // specify multiple subnets as CSV
+                        app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']) // specify multiple subnets as an array
+                       
+                      When specified, the IP addresses or the subnets are excluded from the address determination process, 
+                      and the untrusted IP address nearest to the application server is determined as the client’s IP address. 
+                      This works by checking if req.socket.remoteAddress is trusted. If so, then each address in X-Forwarded-For 
+                      is checked from right to left until the first non-trusted address.                  
+
+Number                Use the address that is at most n number of hops away from the Express application. req.socket.remoteAddress 
+                      is the first hop, and the rest are looked for in the X-Forwarded-For header from right to left. A value of 0 
+                      means that the first untrusted address would be req.socket.remoteAddress, i.e. there is no reverse proxy.   
+
+                        When using this setting, it is important to ensure there are not multiple, different-length paths to 
+                        the Express application such that the client can be less than the configured number of hops away, 
+                        otherwise it may be possible for the client to provide any value.  
+
+Function              Custom trust implementation.
+
+                        app.set('trust proxy', (ip) => {
+                          if (ip === '127.0.0.1' || ip === '123.123.123.123') return true // trusted IPs
+                          else return false
+                        })
+
+Enabling trust proxy will have the following impact:
+
+  * The value of req.hostname is derived from the value set in the X-Forwarded-Host header, 
+    which can be set by the client or by the proxy.
+
+  * X-Forwarded-Proto can be set by the reverse proxy to tell the app whether it is https 
+    or http or even an invalid name. This value is reflected by req.protocol.
+
+  * The req.ip and req.ips values are populated based on the socket address and X-Forwarded-For header, 
+    starting at the first untrusted address.
+
+The trust proxy setting is implemented using the proxy-addr package. For more information, see its documentation.                       

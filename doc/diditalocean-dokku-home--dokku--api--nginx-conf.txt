@@ -1,0 +1,148 @@
+
+server {
+  listen      [::]:80;
+  listen      80;
+  server_name statlertronikdokku.hopto.org;
+  access_log  /var/log/nginx/api-access.log;
+  error_log   /var/log/nginx/api-error.log;
+
+  include /home/dokku/api/nginx.conf.d/*.conf;
+  location / {
+    return 301 https://$host:443$request_uri;
+  }
+
+}
+
+server {
+  listen      [::]:443 ssl http2;
+  listen      443 ssl http2;
+
+  server_name statlertronikdokku.hopto.org;
+  access_log  /var/log/nginx/api-access.log;
+  error_log   /var/log/nginx/api-error.log;
+
+  ssl_certificate           /home/dokku/api/tls/server.crt;                  # Specifies a file with the certificate in the PEM 
+                                                                             # format for the given virtual server. If intermediate 
+                                                                             # certificates should be specified in addition to 
+                                                                             # a primary certificate, they should be specified in 
+                                                                             # the same file in the following order: the primary 
+                                                                             # certificate comes first, then the intermediate 
+                                                                             # certificates. A secret key in the PEM format may 
+                                                                             # be placed in the same file.
+
+  ssl_certificate_key       /home/dokku/api/tls/server.key;                  # Specifies a file with the secret key in the PEM format 
+                                                                             # for the given virtual server.
+
+  ssl_protocols             TLSv1.2 TLSv1.3;
+  ssl_prefer_server_ciphers off;
+
+  keepalive_timeout   70;                                                    # The first parameter sets a timeout during which 
+                                                                             # a keep-alive client connection will stay open on 
+                                                                             # the server side. The zero value disables keep-alive 
+                                                                             # client connections. The optional second parameter 
+                                                                             # sets a value in the “Keep-Alive: timeout=time” 
+                                                                             # response header field. Two parameters may differ.
+
+  location    / {
+
+    gzip on;
+    gzip_min_length  1100;
+    gzip_buffers  4 32k;
+    gzip_types    text/css text/javascript text/xml text/plain text/x-component application/javascript application/x-ja>    gzip_vary on;
+    gzip_comp_level  6;
+
+    proxy_pass  http://api-8080;
+
+    http2_push_preload on;                                                   # This directive is obsolete since version 1.25.1.
+                                                                             # Enables automatic conversion of preload links 
+                                                                             # specified in the “Link” response header fields 
+                                                                             # into push requests.
+
+    proxy_http_version 1.1;                                                  # Sets the HTTP protocol version for proxying. 
+                                                                             # By default, version 1.0 is used. Version 1.1 is 
+                                                                             # recommended for use with keepalive connections 
+                                                                             # and NTLM authentication.
+
+    proxy_read_timeout 60s;                                                  # Defines a timeout for reading a response from 
+                                                                             # the proxied server. The timeout is set only between 
+                                                                             # two successive read operations, not for 
+                                                                             # the transmission of the whole response. If 
+                                                                             # the proxied server does not transmit anything within 
+                                                                             # this time, the connection is closed.
+
+    proxy_buffer_size 4096;                                                  # Sets the size of the buffer used for reading 
+                                                                             # the first part of the response received from 
+                                                                             # the proxied server. This part usually contains 
+                                                                             # a small response header. By default, the buffer size 
+                                                                             # is equal to one memory page. This is either 4K or 8K, 
+                                                                             # depending on a platform. It can be made smaller, 
+                                                                             # however.
+
+    proxy_buffering on;                                                      # Enables or disables buffering of responses from 
+                                                                             # the proxied server.
+
+    proxy_buffers 8 4096;                                                    # Sets the number and size of the buffers used for 
+                                                                             # reading a response from the proxied server, 
+                                                                             # for a single connection. By default, the buffer size 
+                                                                             # is equal to one memory page. This is either 4K or 8K, 
+                                                                             # depending on a platform.
+
+    proxy_busy_buffers_size 8192;                                            # When buffering of responses from the proxied server 
+                                                                             # is enabled, limits the total size of buffers that 
+                                                                             # can be busy sending a response to the client while 
+                                                                             # the response is not yet fully read. In the meantime, 
+                                                                             # the rest of the buffers can be used for reading 
+                                                                             # the response and, if needed, buffering part of 
+                                                                             # the response to a temporary file. By default, size is 
+                                                                             # limited by the size of two buffers set by 
+                                                                             # the proxy_buffer_size and proxy_buffers directives. 
+
+    proxy_set_header Upgrade $http_upgrade;                                  # Allows redefining or appending fields to the request 
+                                                                             # header passed to the proxied server. The value can 
+                                                                             # contain text, variables, and their combinations. 
+                                                                             # These directives are inherited from the previous 
+                                                                             # configuration level if and only if there are no 
+                                                                             # proxy_set_header directives defined on the current 
+                                                                             # level. By default, only two fields are redefined:
+                                                                             #
+                                                                             #   proxy_set_header Host       $proxy_host;
+                                                                             #   proxy_set_header Connection close;
+
+
+    proxy_set_header Connection $http_connection;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Port $server_port;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Request-Start $msec;
+
+  }
+
+  error_page 400 401 402 403 405 406 407 408 409 410 411 412 413 414 415 416 417 418 420 422 423 424 426 428 429 431 44>  location /400-error.html {
+    root /var/lib/dokku/data/nginx-vhosts/dokku-errors;
+    internal;
+  }
+
+  error_page 404 /404-error.html;
+  location /404-error.html {
+    root /var/lib/dokku/data/nginx-vhosts/dokku-errors;
+    internal;
+  }
+
+  error_page 500 501 503 504 505 506 507 508 509 510 511 /500-error.html;
+  location /500-error.html {
+    root /var/lib/dokku/data/nginx-vhosts/dokku-errors;
+    internal;
+  }
+  error_page 502 /502-error.html;
+  location /502-error.html {
+    root /var/lib/dokku/data/nginx-vhosts/dokku-errors;
+    internal;
+  }
+  include /home/dokku/api/nginx.conf.d/*.conf;
+}
+
+upstream api-8080 {
+
+  server 172.17.0.4:8080;
+}

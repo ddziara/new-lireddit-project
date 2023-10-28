@@ -1,0 +1,133 @@
+include /home/dokku/*/nginx.conf;
+
+server_tokens off;
+
+# Settings from https://mozilla.github.io/server-side-tls/ssl-config-generator/
+ssl_session_cache   shared:SSL:20m;                                     # Sets the types and sizes of caches that store 
+                                                                        # session parameters. A cache can be of any of 
+                                                                        # the following types:
+                                                                        #
+                                                                        # off
+                                                                        #   the use of a session cache is strictly prohibited: 
+                                                                        #   nginx explicitly tells a client that sessions may 
+                                                                        #   not be reused.
+                                                                        # none
+                                                                        #   the use of a session cache is gently disallowed: 
+                                                                        #   nginx tells a client that sessions may be reused, 
+                                                                        #   but does not actually store session parameters in 
+                                                                        #   the cache.
+                                                                        # builtin
+                                                                        #   a cache built in OpenSSL; used by one worker process 
+                                                                        #   only. The cache size is specified in sessions. 
+                                                                        #   If size is not given, it is equal to 20480 sessions. 
+                                                                        #   Use of the built-in cache can cause memory fragmentation.
+                                                                        # shared
+                                                                        #   a cache shared between all worker processes. The cache 
+                                                                        #   size is specified in bytes; one megabyte can store about 
+                                                                        #   4000 sessions. Each shared cache should have an arbitrary 
+                                                                        #   name. A cache with the same name can be used in several 
+                                                                        #   virtual servers. It is also used to automatically generate, 
+                                                                        #   store, and periodically rotate TLS session ticket keys 
+                                                                        #   (1.23.2) unless configured explicitly using 
+                                                                        #   the ssl_session_ticket_key directive.
+
+ssl_session_timeout 1d;                                                 # Specifies a time during which a client may reuse 
+                                                                        # the session parameters.
+
+ssl_session_tickets off;                                                # Enables or disables session resumption through TLS 
+                                                                        # session tickets
+
+ssl_dhparam /etc/nginx/dhparam.pem;                                     # Specifies a file with DH parameters for DHE ciphers.
+                                                                        # 
+                                                                        # By default no parameters are set, and therefore DHE ciphers 
+                                                                        # will not be used.
+
+ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GC>
+
+# openssl ciphers
+# TLS_AES_256_GCM_SHA384:
+# TLS_CHACHA20_POLY1305_SHA256:
+# TLS_AES_128_GCM_SHA256:
+# ECDHE-ECDSA-AES256-GCM-SHA384:                     *
+# ECDHE-RSA-AES256-GCM-SHA384:                       *
+# DHE-RSA-AES256-GCM-SHA384:
+# ECDHE-ECDSA-CHACHA20-POLY1305:
+# ECDHE-RSA-CHACHA20-POLY1305:
+# DHE-RSA-CHACHA20-POLY1305:
+# ECDHE-ECDSA-AES128-GCM-SHA256:                     *
+# ECDHE-RSA-AES128-GCM-SHA256:                       *
+# DHE-RSA-AES128-GCM-SHA256:
+# ECDHE-ECDSA-AES256-SHA384:
+# ECDHE-RSA-AES256-SHA384:
+# DHE-RSA-AES256-SHA256:
+# ECDHE-ECDSA-AES128-SHA256:
+# ECDHE-RSA-AES128-SHA256:
+# DHE-RSA-AES128-SHA256:
+# ECDHE-ECDSA-AES256-SHA:
+# ECDHE-RSA-AES256-SHA:
+# DHE-RSA-AES256-SHA:
+# ECDHE-ECDSA-AES128-SHA:
+# ECDHE-RSA-AES128-SHA:
+# DHE-RSA-AES128-SHA:
+# RSA-PSK-AES256-GCM-SHA384:
+# DHE-PSK-AES256-GCM-SHA384:
+# RSA-PSK-CHACHA20-POLY1305:
+# DHE-PSK-CHACHA20-POLY1305:
+# ECDHE-PSK-CHACHA20-POLY1305:
+# AES256-GCM-SHA384:
+# PSK-AES256-GCM-SHA384:
+# PSK-CHACHA20-POLY1305:
+# RSA-PSK-AES128-GCM-SHA256:
+# DHE-PSK-AES128-GCM-SHA256:
+# AES128-GCM-SHA256:
+# PSK-AES128-GCM-SHA256:
+# AES256-SHA256:
+# AES128-SHA256:
+# ECDHE-PSK-AES256-CBC-SHA384:
+# ECDHE-PSK-AES256-CBC-SHA:
+# SRP-RSA-AES-256-CBC-SHA:
+# SRP-AES-256-CBC-SHA:
+# RSA-PSK-AES256-CBC-SHA384:
+# DHE-PSK-AES256-CBC-SHA384:
+# RSA-PSK-AES256-CBC-SHA:
+# DHE-PSK-AES256-CBC-SHA:
+# AES256-SHA:
+# PSK-AES256-CBC-SHA384:
+# PSK-AES256-CBC-SHA:
+# ECDHE-PSK-AES128-CBC-SHA256:
+# ECDHE-PSK-AES128-CBC-SHA:
+# SRP-RSA-AES-128-CBC-SHA:
+# SRP-AES-128-CBC-SHA:
+# RSA-PSK-AES128-CBC-SHA256:
+# DHE-PSK-AES128-CBC-SHA256:
+# RSA-PSK-AES128-CBC-SHA:
+# DHE-PSK-AES128-CBC-SHA:
+# AES128-SHA:
+# PSK-AES128-CBC-SHA256:
+# PSK-AES128-CBC-SHA
+
+# ECDHE, EECDH
+#   Cipher suites using authenticated ephemeral ECDH key agreement.
+
+# aECDSA, ECDSA
+#   Cipher suites using ECDSA authentication, i.e. the certificates carry ECDSA keys.
+
+# AES128, AES256, AES
+#   cipher suites using 128 bit AES, 256 bit AES or either 128 or 256 bit AES.
+
+# AES in Galois Counter Mode (GCM):
+
+# SHA256, SHA384
+#   Cipher suites using SHA256 or SHA384.
+
+# kRSA, aRSA, RSA
+#   Cipher suites using RSA key exchange or authentication. RSA is an alias for kRSA.
+
+# Ephemeral Diffie-Hellman uses temporary, public keys. 
+# Each instance or run of the protocol uses a different public key. 
+# The authenticity of the server's temporary key can be verified 
+# by checking the signature on the key. Because the public keys are 
+# temporary, a compromise of the server's long term signing key does 
+# not jeopardize the privacy of past sessions. This is known as 
+# Perfect Forward Secrecy (PFS).
+

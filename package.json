@@ -2,6 +2,10 @@
   "name": "lireddit.project",
   "packageManager": "yarn@3.5.1",
   "private": true,
+  "scripts": {
+    "server:start": "yarn workspace server start",
+    "web:start": "yarn workspace web start"
+  },
   "workspaces": [
     "packages/*"
   ],

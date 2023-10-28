@@ -36,3 +36,144 @@ root@dokku0306onubuntu2204-s-1vcpu-1gb-fra1-01:~# docker container list
 CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS          PORTS      NAMES
 b4be011fe29c   redis:7.2.1     "docker-entrypoint.s…"   3 minutes ago    Up 3 minutes    6379/tcp   dokku.redis.olive
 77e1dad3572b   postgres:16.0   "docker-entrypoint.s…"   13 minutes ago   Up 13 minutes   5432/tcp   dokku.postgres.hummus
+
+11. In server app use connection strings for postgres & redis
+
+export const AppDataSource = new DataSource({
+[...]
+  url: process.env.DATABASE_URL,
+[...]  
+});
+
+  const redisClient = createClient({url: process.env.REDIS_URL});
+
+  In .env:
+
+DATABASE_URL=postgresql://statler:12345aBc@192.168.0.8:5432/lireddit2
+REDIS_URL=redis://127.0.0.1:6379
+
+12. Add CORS origin:
+
+  var corsOptions = {
+    origin: process.env.CORS_ORIGIN,         // <=========================
+    // optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+    credentials: true,
+  };
+
+  app.use(cors<cors.CorsRequest>(corsOptions));         
+
+  In .env (for now):
+
+ CORS_ORIGIN=http://192.168.0.8:3000
+ 
+13. Add "domain" to cookie options (for now):
+
+  app.use(
+    session({
+[...]      
+      cookie: {
+[...]        
+        domain: __prod__ ? ".digitalocean.com" : undefined
+      },
+[...]      
+    })
+  );
+
+14. Inform Express that there is reverse proxy in a front (commented for now):
+
+  // app.set("proxy", 1);
+
+  var corsOptions = {
+[...]
+  };
+
+15. Remove data insertion in migration file
+
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        // await queryRunner.query(
+        // `insert into post (title, text, "creatorId", "createdAt") values ('His Name Was Jason: 30 Years of Friday the 13th', 'Nam ultrices, libero non mattis pulvinar, nulla pede ullamcorper augue, a suscipit nulla elit ac nulla. Sed vel enim sit amet nunc viverra dapibus. Nulla suscipit ligula in lacus.', 5, '2023-03-03T06:31:00Z');
+        // insert into post (title, text, "creatorId", "createdAt") values ('Gulliver''s Travels', 'Praesent blandit. Nam nulla. Integer pede justo, lacinia eget, tincidunt eget, tempus vel, pede.
+[...]
+
+
+16. Modify "app-data-source.ts" (relative to package.json location, I guess)
+
+[...]
+  entities: ["./dist/src/entities/*.js"],
+  migrations: ["./dist/src/migrations/*.js"]
+[...]
+
+17. In ".env" replace "lireddit2" with "lireddit3" in Postgres connection url
+
+DATABASE_URL=postgresql://statler:12345aBc@192.168.0.8:5432/lireddit3
+
+18. Create database "lireddit3" (it's empty to create initial migration creating tables)
+
+19. Generate migration (transition from current entities to current tables in database)
+
+    yarn workspace server dlx typeorm -d ./dist/src/app-data-source.js  migration:generate Initial
+
+20. Copy generated "*-Initial.ts" to "migrations" directory
+
+21. In ".env" restore "lireddit2"
+
+22. Build docker IMAGE
+
+    sudo docker build -t x68st91aadd/lireddit:1 -f Dockerfile-server .
+                             ^           ^    ^
+                             |           |    |
+                    dockerhub account    |   tag 
+                                         |
+                                    repository                        
+
+23. Login to github
+
+   sudo docker login
+
+24. Push the image to the github repository
+
+   sudo docker push x68st91aadd/lireddit:1
+ 
+25. ssh to dokku droplet
+
+26. Deploy from docker image  
+
+  dokku git:from-image api x68st91aadd/lireddit:1
+
+27. Install letsencrypt plugin 
+
+  dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
+
+28. set global email for letsencrypt
+
+  dokku letsencrypt:set --global email ddziara@poczta.onet.pl
+
+29. Set a custom domain that you own for the application
+
+  dokku domains:set api statlertronikdokku.hopto.org
+
+30. Enable letsencrypt for the app
+
+  dokku letsencrypt:enable api
+
+31. Map proxy port for "api" app 
+
+  dokku proxy:ports-add api https:443:8080 
+
+            _____________________________________________
+            |                            _____________  |
+            | .............              |           |  | 
+-------->443|-:rev. proxy :--------->8080|  server   |  |
+            | .............              |___________|  |
+            |                  host        container    |
+            |___________________________________________| 
+
+root@dokku0306onubuntu2204-s-1vcpu-1gb-fra1-01:/home/dokku/api/nginx.conf.d# dokku proxy:ports api
+-----> Port mappings for api
+    -----> scheme  host port  container port
+    https          443        8080
+
+32. Install this to use Vercel CLI
+
+  npm i -g vercel@latest
+

@@ -1,0 +1,117 @@
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+        worker_connections 768;
+        # multi_accept on;
+}
+
+http {
+
+        ##
+        # Basic Settings
+        ##
+
+        sendfile on;                                               # Enables or disables the use of sendfile().        
+
+        tcp_nopush on;                                             # Enables or disables the use of the TCP_NOPUSH 
+                                                                   # socket option on FreeBSD or the TCP_CORK socket 
+                                                                   # option on Linux. The options are enabled only 
+                                                                   # when sendfile is used. Enabling the option allows
+                                                                   #
+                                                                   #   * sending the response header and the beginning 
+                                                                   #     of a file in one packet, on Linux and FreeBSD 4.*;
+                                                                   #   * sending a file in full packets.
+
+        types_hash_max_size 2048;                                  # Sets the maximum size of the types hash tables.
+
+        # server_tokens off;                                       # Enables or disables emitting nginx version on error 
+                                                                   # pages and in the “Server” response header field.
+
+        # server_names_hash_bucket_size 64;                        # Sets the bucket size for the server names hash tables. 
+                                                                   # The default value depends on the size of the processor’s 
+                                                                   # cache line.
+
+        # server_name_in_redirect off;                             # Enables or disables the use of the primary server name, 
+                                                                   # specified by the server_name directive, in absolute 
+                                                                   # redirects issued by nginx. When the use of the primary 
+                                                                   # server name is disabled, the name from the “Host” 
+                                                                   # request header field is used. If this field is not present, 
+                                                                   # the IP address of the server is used.
+
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        ##
+        # SSL Settings
+        ##
+
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE       # Enables the specified protocols.
+        ssl_prefer_server_ciphers on;                              # Specifies that server ciphers should be preferred over client 
+                                                                   # ciphers when using the SSLv3 and TLS protocols.
+
+        ##
+        # Logging Settings
+        ##
+
+        access_log /var/log/nginx/access.log;
+        error_log /var/log/nginx/error.log;
+
+        ##
+        # Gzip Settings
+        ##
+
+        gzip on;
+
+        # gzip_vary on;                                            # Enables or disables gzipping of responses.
+
+        # gzip_proxied any;                                        # Enables or disables gzipping of responses 
+                                                                   # for proxied requests depending on the request 
+                                                                   # and response. The fact that the request is proxied 
+                                                                   # is determined by the presence of the “Via” request 
+                                                                   # header field. The directive accepts multiple parameters:
+
+        # gzip_comp_level 6;                                       # Sets a gzip compression level of a response. 
+                                                                   # Acceptable values are in the range from 1 to 9.
+
+        # gzip_buffers 16 8k;                                      # Sets the number and size of buffers used to compress 
+                                                                   # a response. By default, the buffer size is equal 
+                                                                   # to one memory page. This is either 4K or 8K, 
+                                                                   # depending on a platform.
+
+        # gzip_http_version 1.1;                                   # Sets the minimum HTTP version of a request required 
+                                                                   # to compress a response.
+
+        # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/x>
+
+        ##
+        # Virtual Host Configs
+        ##
+
+        include /etc/nginx/conf.d/*.conf;
+        include /etc/nginx/sites-enabled/*;
+}
+
+
+#mail {
+#       # See sample authentication script at:
+#       # http://wiki.nginx.org/ImapAuthenticateWithApachePhpScript
+#
+#       # auth_http localhost/auth.php;
+#       # pop3_capabilities "TOP" "USER";
+#       # imap_capabilities "IMAP4rev1" "UIDPLUS";
+#
+#       server {
+#               listen     localhost:110;
+#               protocol   pop3;
+#               proxy      on;
+#       }
+#
+#       server {
+#               listen     localhost:143;
+#               protocol   imap;
+#               proxy      on;
+#       }
+#}

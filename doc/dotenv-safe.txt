@@ -1,0 +1,8 @@
+https://www.npmjs.com/package/dotenv-safe
+
+to generate .env.example and typescript defs use
+
+https://github.com/benawad/gen-env-types
+
+npx gen-env-types ./packages/server/.env -o ./packages/server/src/env.d.ts -e ./packages/server/
+

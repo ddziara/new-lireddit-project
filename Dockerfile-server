@@ -1,12 +1,7 @@
 FROM node:16
-ARG BUILD_CONTEXT
 
 # Create app directory
 WORKDIR /usr/src/app
-
-# install yarn 3
-RUN corepack enable
-RUN yarn set version 3.5.1
 
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
@@ -15,16 +10,24 @@ COPY package.json ./
 COPY yarn.lock ./
 COPY .yarnrc.yml ./
 COPY tsconfig.json ./
-COPY ./packages/$BUILD_CONTEXT/package.json packages/$BUILD_CONTEXT/
+COPY ./packages/server/package.json packages/server/
 COPY ./.yarn/plugins .yarn/plugins
 COPY ./.yarn/sdks .yarn/sdks
+COPY ./.yarn/releases .yarn/releases
 
-RUN yarn
+# install yarn 3
+RUN corepack enable
+RUN yarn set version 3.5.1
+
+RUN yarn install
 # If you are building your code for production
 # RUN npm ci --only=production
 
 # Bundle app source
-COPY ./packages/$BUILD_CONTEXT packages/$BUILD_CONTEXT
+COPY ./packages/server packages/server
+
+COPY ./packages/server/.env.production packages/server/.env
+COPY ./packages/server/.env.example.production packages/server/.env.example
 
 # Compile typescript files
 RUN yarn workspace server build
@@ -32,7 +35,7 @@ RUN yarn workspace server build
 ENV NODE_ENV production
 
 EXPOSE 8080
-CMD node packages/$BUILD_CONTEXT/dist/index.js
+CMD ["yarn", "workspace", "server", "start"]
 USER node
 
 

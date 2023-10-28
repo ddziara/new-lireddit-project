@@ -2,7 +2,7 @@ import DataLoader from "dataloader";
 import { User } from "../entities/User";
 import { In } from "typeorm";
 import { Updoot } from "../entities/Updoot";
-import { AppDataSource } from "../app-data-source";
+import AppDataSource from "../app-data-source";
 
 // [{postId: 5, userId:10}]
 // {postId: 5, userId:10, value: 1}
@@ -48,7 +48,7 @@ export const createUpdootLoader = () =>
 
       const updootIdsToUpdoots: Record<string, Updoot> = {}; // means object with props beeing "number" and values being "User"
 
-      updoots.forEach((updoot) => {
+      updoots.forEach((updoot: Updoot) => {
         updootIdsToUpdoots[`${updoot.postId}|${updoot.userId}`] = updoot;
       });
 

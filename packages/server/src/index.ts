@@ -10,7 +10,7 @@ import http from "http";
 import { createClient } from "redis";
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
-import { AppDataSource } from "./app-data-source";
+import AppDataSource from "./app-data-source";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
@@ -18,6 +18,11 @@ import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types";
 import { createUpdootLoader } from "./utils/createUpdootLoader";
 import { createUserLoader } from "./utils/createUserLoader";
+import dotenv from "dotenv-safe";
+
+dotenv.config();
+
+console.log("PORT: ", process.env.PORT);
 
 const main = async () => {
   await AppDataSource.initialize();
@@ -30,7 +35,7 @@ const main = async () => {
   const httpServer = http.createServer(app);
 
   // Initialize client.
-  const redisClient = createClient();
+  const redisClient = createClient({url: process.env.REDIS_URL});
   redisClient.connect().catch(console.error);
 
   // Initialize store.
@@ -40,8 +45,10 @@ const main = async () => {
     disableTouch: true,
   });
 
+  // app.set("proxy", 1);
+
   var corsOptions = {
-    origin: "http://192.168.0.8:3000",
+    origin: process.env.CORS_ORIGIN,
     // optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
     credentials: true,
   };
@@ -58,6 +65,7 @@ const main = async () => {
         httpOnly: true, // JavaScript won't see it in document.cookie
         sameSite: "lax", // csrf
         secure: __prod__, // only https
+        domain: __prod__ ? ".digitalocean.com" : undefined
       },
       resave: false, // required: force lightweight session keep alive (touch)
       saveUninitialized: false, // recommended: only save session when data exists
@@ -116,8 +124,8 @@ const main = async () => {
     })
   );
 
-  app.listen(4000, () => {
-    console.log("server started on localhost:4000");
+  app.listen(parseInt(process.env.PORT), () => {
+    console.log(`server started on localhost:${process.env.PORT}`);
   });
 };
 

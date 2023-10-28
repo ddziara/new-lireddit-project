@@ -3563,6 +3563,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/dotenv-safe@npm:^8":
+  version: 8.1.3
+  resolution: "@types/dotenv-safe@npm:8.1.3"
+  dependencies:
+    dotenv: ^8.2.0
+  checksum: 3a4739cb7e75d83f6c9c147590dd2ab4946e0fc48eee5912c3536b3ea108f89683e7d7c2dc7826a63a9b95a763000b1f82b4141a5ab56f5735138163db1a8d26
+  languageName: node
+  linkType: hard
+
 "@types/express-serve-static-core@npm:^4.17.30, @types/express-serve-static-core@npm:^4.17.33":
   version: 4.17.35
   resolution: "@types/express-serve-static-core@npm:4.17.35"
@@ -5092,6 +5101,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dotenv-safe@npm:^8.2.0":
+  version: 8.2.0
+  resolution: "dotenv-safe@npm:8.2.0"
+  dependencies:
+    dotenv: ^8.2.0
+  checksum: 8b73770330528d77630009afa44239127c44d634b0fa7d7545932a8e72686d774ceadea62d381ed7c911e0facac4ee1489132e44b746f36eb8f2e3ee6929eb78
+  languageName: node
+  linkType: hard
+
 "dotenv@npm:^16.0.0":
   version: 16.1.4
   resolution: "dotenv@npm:16.1.4"
@@ -5106,10 +5124,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:^16.3.1":
-  version: 16.3.1
-  resolution: "dotenv@npm:16.3.1"
-  checksum: 15d75e7279018f4bafd0ee9706593dd14455ddb71b3bcba9c52574460b7ccaf67d5cf8b2c08a5af1a9da6db36c956a04a1192b101ee102a3e0cf8817bbcf3dfd
+"dotenv@npm:^8.2.0":
+  version: 8.6.0
+  resolution: "dotenv@npm:8.6.0"
+  checksum: 38e902c80b0666ab59e9310a3d24ed237029a7ce34d976796349765ac96b8d769f6df19090f1f471b77a25ca391971efde8a1ea63bb83111bd8bec8e5cc9b2cd
   languageName: node
   linkType: hard
 
@@ -5578,6 +5596,17 @@ __metadata:
     strip-ansi: ^6.0.1
     wide-align: ^1.1.5
   checksum: 788b6bfe52f1dd8e263cda800c26ac0ca2ff6de0b6eee2fe0d9e3abf15e149b651bd27bf5226be10e6e3edb5c4e5d5985a5a1a98137e7a892f75eff76467ad2d
+  languageName: node
+  linkType: hard
+
+"gen-env-types@npm:^1.3.4":
+  version: 1.3.4
+  resolution: "gen-env-types@npm:1.3.4"
+  dependencies:
+    chalk: ^4.0.0
+  bin:
+    gen-env-types: gen-env-types.js
+  checksum: 4321b784099c1924ba163041aae5dc24cbf2bbe24d110cf2484f3d9c01eb24ba15553d3f52ca0d2b4c04e21ab14f23b0353a1d29085719a401074386254b9f3e
   languageName: node
   linkType: hard
 
@@ -8136,6 +8165,7 @@ __metadata:
     "@apollo/server": ^4.7.1
     "@types/body-parser": ^1
     "@types/cors": ^2
+    "@types/dotenv-safe": ^8
     "@types/express": ^4
     "@types/express-session": ^1
     "@types/node": ^20.2.5
@@ -8147,9 +8177,10 @@ __metadata:
     connect-redis: ^7.1.0
     cors: ^2.8.5
     dataloader: ^2.2.2
-    dotenv: ^16.3.1
+    dotenv-safe: ^8.2.0
     express: ^4.18.2
     express-session: ^1.17.3
+    gen-env-types: ^1.3.4
     graphql: ^16.6.0
     nodemailer: ^6.9.3
     nodemon: ^2.0.22
