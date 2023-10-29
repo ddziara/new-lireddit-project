@@ -22,8 +22,6 @@ import dotenv from "dotenv-safe";
 
 dotenv.config();
 
-console.log("PORT: ", process.env.PORT);
-
 const main = async () => {
   await AppDataSource.initialize();
   await AppDataSource.runMigrations();

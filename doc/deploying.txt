@@ -87,14 +87,15 @@ REDIS_URL=redis://127.0.0.1:6379
 [...]
   };
 
-15. Remove data insertion in migration file
+// 15. Remove data insertion in migration file
+//
+//    public async up(queryRunner: QueryRunner): Promise<void> {
+//        // await queryRunner.query(
+//        // `insert into post (title, text, "creatorId", "createdAt") values ('His Name Was Jason: 30 Years of Friday the 13th', 'Nam ultrices, libero non mattis pulvinar, nulla pede ullamcorper augue, a suscipit nulla elit ac nulla. Sed vel enim sit amet nunc viverra dapibus. Nulla suscipit ligula in lacus.', 5, '2023-03-03T06:31:00Z');
+//        // insert into post (title, text, "creatorId", "createdAt") values ('Gulliver''s Travels', 'Praesent blandit. Nam nulla. Integer pede justo, lacinia eget, tincidunt eget, tempus vel, pede.
+//[...]
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        // await queryRunner.query(
-        // `insert into post (title, text, "creatorId", "createdAt") values ('His Name Was Jason: 30 Years of Friday the 13th', 'Nam ultrices, libero non mattis pulvinar, nulla pede ullamcorper augue, a suscipit nulla elit ac nulla. Sed vel enim sit amet nunc viverra dapibus. Nulla suscipit ligula in lacus.', 5, '2023-03-03T06:31:00Z');
-        // insert into post (title, text, "creatorId", "createdAt") values ('Gulliver''s Travels', 'Praesent blandit. Nam nulla. Integer pede justo, lacinia eget, tincidunt eget, tempus vel, pede.
-[...]
-
+15. Remove migration file
 
 16. Modify "app-data-source.ts" (relative to package.json location, I guess)
 
@@ -109,11 +110,11 @@ DATABASE_URL=postgresql://statler:12345aBc@192.168.0.8:5432/lireddit3
 
 18. Create database "lireddit3" (it's empty to create initial migration creating tables)
 
-19. Generate migration (transition from current entities to current tables in database)
+// 19. Generate migration (transition from current entities to current tables in database)
+//
+//    yarn workspace server dlx typeorm -d ./dist/src/app-data-source.js  migration:generate Initial
 
-    yarn workspace server dlx typeorm -d ./dist/src/app-data-source.js  migration:generate Initial
-
-20. Copy generated "*-Initial.ts" to "migrations" directory
+// 20. Copy generated "*-Initial.ts" to "migrations" directory
 
 21. In ".env" restore "lireddit2"
 
@@ -162,8 +163,8 @@ DATABASE_URL=postgresql://statler:12345aBc@192.168.0.8:5432/lireddit3
 
             _____________________________________________
             |                            _____________  |
-            | .............              |           |  | 
--------->443|-:rev. proxy :--------->8080|  server   |  |
+            | .............              |  server   |  | 
+-------->443|-:rev. proxy :--------->8080|  (api)    |  |
             | .............              |___________|  |
             |                  host        container    |
             |___________________________________________| 
