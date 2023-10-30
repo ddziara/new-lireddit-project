@@ -52,6 +52,7 @@ console.log("onSubmit() #1");
               );
            }
 console.log("errors: ", errors);
+console.log("user: ", user);
           if (errors) {
             setErrors(toErrorMap(errors));
           } else if (user) {
