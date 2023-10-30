@@ -49,7 +49,7 @@ export const Register: React.FC<registerProps> = () => {
                 regularUserResponse.user
               );
            }
-
+console.log("errors: ", errors);
           if (errors) {
             setErrors(toErrorMap(errors));
           } else if (user) {

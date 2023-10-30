@@ -43,13 +43,15 @@ const main = async () => {
     disableTouch: true,
   });
 
-  // app.set("proxy", 1);
+  // app.set("trust proxy", 1);
 
   var corsOptions = {
     origin: process.env.CORS_ORIGIN,
     // optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
     credentials: true,
   };
+
+  console.log(corsOptions);
 
   app.use(cors<cors.CorsRequest>(corsOptions));
 

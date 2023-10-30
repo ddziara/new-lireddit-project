@@ -81,7 +81,7 @@ REDIS_URL=redis://127.0.0.1:6379
 
 14. Inform Express that there is reverse proxy in a front (commented for now):
 
-  // app.set("proxy", 1);
+  // app.set("trust proxy", 1);
 
   var corsOptions = {
 [...]
@@ -127,7 +127,7 @@ DATABASE_URL=postgresql://statler:12345aBc@192.168.0.8:5432/lireddit3
                                          |
                                     repository                        
 
-23. Login to github
+23. Login to dockerhub
 
    sudo docker login
 
@@ -178,3 +178,89 @@ root@dokku0306onubuntu2204-s-1vcpu-1gb-fra1-01:/home/dokku/api/nginx.conf.d# dok
 
   npm i -g vercel@latest
 
+33. Create ".env.local"
+
+NEXT_PUBLIC_API_URL=http://192.168.0.8:4000/graphql
+
+34. Add script to package.json
+
+  "scripts": {
+    "gen-env": "gen-env-types .env.local -o ./src/env.local.d.ts -e ./  -r .env.local.example",
+    [...]
+  }
+
+35. Run the script to generate .d.ts typescript definition file
+
+36. Modify utils/createUrqlClient.ts
+
+export const createUrqlClient = (ssrExchange: any, ctx: any) => {
+  [...]
+
+  return {
+    url: process.env.NEXT_PUBLIC_API_URL,
+    [...]
+  }
+  
+37. Commit changes and push to github
+
+38. In Vercel dashboard "Add New..." -> "Project" 
+
+    then select repository "new-lireddit-project" and "Import"
+
+    then select "Next.js" as "Frameset Preset" ans "packages/web" as "Root Directory"
+
+    then click "Deploy"
+
+39. In Vercel dashboard click the project
+
+    then click "Domains"
+
+    then click "Settings"
+
+    then click "Environment Variables"
+
+    Key:  NEXT_PUBLIC_API_URL
+    Value: statlertronikdokku.hopto.org/graphql
+
+40. In Vercel dashboard  click the project   
+
+    then click "Domains"
+
+    then click "Deployments"
+
+    then select the deployment
+
+    then from menu select "Redeploy"
+
+41. Fix CORS
+
+    For server in .env.production update "CORS_ORIGIN"
+
+      CORS_ORIGIN=https://new-lireddit-project-web.vercel.app
+
+    then build docker IMAGE
+
+      sudo docker build -t x68st91aadd/lireddit:3 -f Dockerfile-server .
+
+    then Login to dockerhub
+
+      sudo docker login
+
+    next push the image to the github repository
+
+      sudo docker push x68st91aadd/lireddit:3
+ 
+    next ssh to dokku droplet
+
+    next deploy from docker image  
+
+      dokku git:from-image api x68st91aadd/lireddit:3
+
+............................
+How to Debug Cookies
+
+github.com/benawad/how-to-debug-cookies
+............................
+
+There's a problem!!!
+  POST https://statlertronikdokku.hopto.org/graphql net::ERR_HTTP2_PROTOCOL_ERROR 200 (OK)
