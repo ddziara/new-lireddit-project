@@ -28,7 +28,9 @@ export const Register: React.FC<registerProps> = () => {
       <Formik
         initialValues={{ email: "", user: "", password: "" }}
         onSubmit={async (values, { setErrors }) => {
+console.log("onSubmit() #1");          
           const response = await register({ options: values }); // returning Promise to avoid forever spinning on Submit button
+          console.log("onSubmit() #2");          
 
           const regularUserResponse = useFragment(
             RegularUserResponseFragmentDoc,
