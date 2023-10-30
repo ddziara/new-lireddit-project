@@ -30,7 +30,7 @@ export const Register: React.FC<registerProps> = () => {
         onSubmit={async (values, { setErrors }) => {
 console.log("onSubmit() #1");          
           const response = await register({ options: values }); // returning Promise to avoid forever spinning on Submit button
-          console.log("onSubmit() #2");          
+          console.log("onSubmit() #2", response);          
 
           const regularUserResponse = useFragment(
             RegularUserResponseFragmentDoc,
