@@ -267,6 +267,8 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
 
     then from menu select "Redeploy"
 
+=======================================================================================
+
 41. Fix CORS
 
     For server in .env.production update "CORS_ORIGIN"
