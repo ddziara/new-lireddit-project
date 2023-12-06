@@ -1,0 +1,34 @@
+Dokku host:
+  api.codeponder.com
+and 
+vercel domain:
+
+  codeponder.com  
+
+ap.www.namecheap.com
+DNS server
+
+Type                    Host             Value                        TTL                     
+----------------------------------------------------------------------------------
+A Record                api              64.227.13.208                Automatic
+
+A Record                @                76.76.21.21                  Automatic                                  
+                        ^
+                        |
+      there's gonna be no subdomain
+
+A Record                www              76.76.21.21                  Automatic         
+
+=====================================================================================
+or
+=====================================================================================
+Type                    Host             Value                        TTL                     
+----------------------------------------------------------------------------------
+A Record                api              64.227.13.208                Automatic
+
+A Record                @                76.76.21.21                  Automatic                                  
+                        ^
+                        |
+      there's gonna be no subdomain
+
+URL Redicrect Record    www              codeponder.com               Automatic         

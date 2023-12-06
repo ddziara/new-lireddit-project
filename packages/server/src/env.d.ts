@@ -6,6 +6,7 @@ declare global {
       REDIS_URL: string;
       PORT: string;
       CORS_ORIGIN: string;
+      COOKIES_DOMAIN: string;
     }
   }
 }

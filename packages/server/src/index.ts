@@ -33,7 +33,7 @@ const main = async () => {
   const httpServer = http.createServer(app);
 
   // Initialize client.
-  const redisClient = createClient({url: process.env.REDIS_URL});
+  const redisClient = createClient({ url: process.env.REDIS_URL });
   redisClient.connect().catch(console.error);
 
   // Initialize store.
@@ -43,7 +43,9 @@ const main = async () => {
     disableTouch: true,
   });
 
-  // app.set("trust proxy", 1);
+  if (__prod__) {
+    app.set("trust proxy", 1);
+  }
 
   var corsOptions = {
     origin: process.env.CORS_ORIGIN,
@@ -65,7 +67,7 @@ const main = async () => {
         httpOnly: true, // JavaScript won't see it in document.cookie
         sameSite: "lax", // csrf
         secure: __prod__, // only https
-        domain: __prod__ ? ".digitalocean.com" : undefined
+        // domain: __prod__ ? process.env.COOKIES_DOMAIN : undefined
       },
       resave: false, // required: force lightweight session keep alive (touch)
       saveUninitialized: false, // recommended: only save session when data exists

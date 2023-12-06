@@ -17,4 +17,58 @@ gogs-statlertronik.duckdns.org
 https://www.whatsmydns.net/ to check DNS data propagation
 
 
+========================================================================================================
+https://www.getfreedomain.name/domain/us.to/
 
+
+https://freedns.afraid.org/
+
+api.starprojecs.twilightparadox.com               138.197.180.80
+---------------
+my subdomain
+
+www.starprojecs.twilightparadox.com               ???????
+---------------
+my subdomain
+
+========================================================================================================
+https://nic.eu.org/arf/en/
+
+1. This is only registrar which points to DNS hosting servers
+
+2. Choose domain: starprojects.pl.eu.org
+
+// 3. Configure your nameserver(s) with the domain: starprojects.pl.eu.org
+//
+//   https://www.namecheap.com/
+//
+//   https://www.namecheap.com/support/knowledgebase/article.aspx/536/51/how-do-i-set-my-domain-to-use-namecheaps-freedns-service/
+//
+// 4. Request domain
+//
+//   Set NS servers to:
+//
+//   freedns1.registrar-servers.com
+//   freedns2.registrar-servers.com 
+//   freedns3.registrar-servers.com
+//   freedns4.registrar-servers.com
+//   freedns5.registrar-servers.com
+
+// 5. Wait for an e-mail reply indicating that your request has been validated. This step requires human intervention and can take a few days.
+
+3. On hostry.com ceate free domain: starprojects.pl.eu.org
+
+4. On nic.eu.org
+
+  Set NS Servers to:
+
+  ns1.hostry.com
+  ns2.hostry.com
+  ns3.hostry.com
+  ns4.hostry.com
+
+========================================================================================================
+Hostry Free DNS
+
+hostry.com
+========================================================================================================

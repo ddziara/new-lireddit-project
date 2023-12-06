@@ -4,3 +4,13 @@ VPS - Virtual Private Server
 
 digital ocean free trial
 https://www.digitalocean.com/try/free-trial-offer?utm_campaign=emea_brand_kw_en_cpc&utm_adgroup=digitalocean_credit_exact&_keyword=digitalocean%20free&_device=c&_adposition=&utm_content=conversion&utm_medium=cpc&utm_source=google&gad=1&gclid=CjwKCAjwzo2mBhAUEiwAf7wjktgXTOlTOKc7MT34wpyUFdBBIkVaOfXVIMTn2axpOWSAxkvZWZoZWBoCP8IQAvD_BwE#navattic
+
+
+
+===============================
+dokku trace:on
+dokku trace:off
+
+dokku nginx:start
+dokku nginx:stop
+

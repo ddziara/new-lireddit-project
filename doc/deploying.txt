@@ -1,3 +1,9 @@
+##############################################################################
+#
+# Backend available at: api.lireddit.starprojects.pl.eu.org
+#
+##############################################################################
+
 1. On digitalocen create dokku (marketplace) droplet (VPS - Virtual Private Server)
 
 2. ssh to it
@@ -47,7 +53,7 @@ export const AppDataSource = new DataSource({
 
   const redisClient = createClient({url: process.env.REDIS_URL});
 
-  In .env:
+  In .env (for local configuration):
 
 DATABASE_URL=postgresql://statler:12345aBc@192.168.0.8:5432/lireddit2
 REDIS_URL=redis://127.0.0.1:6379
@@ -62,9 +68,13 @@ REDIS_URL=redis://127.0.0.1:6379
 
   app.use(cors<cors.CorsRequest>(corsOptions));         
 
-  In .env (for now):
+  In .env (for local configuration, for now):
 
  CORS_ORIGIN=http://192.168.0.8:3000
+
+  In .env.production (for web configuration):
+
+ CORS_ORIGIN=https://www.lireddit.starprojects.pl.eu.org   
  
 13. Add "domain" to cookie options (for now):
 
@@ -79,9 +89,11 @@ REDIS_URL=redis://127.0.0.1:6379
     })
   );
 
-14. Inform Express that there is reverse proxy in a front (commented for now):
+14. Inform Express that there is reverse proxy in a front (only in production):
 
-  // app.set("trust proxy", 1);
+  if (__prod__) {
+    app.set("trust proxy", 1);
+  }
 
   var corsOptions = {
 [...]
@@ -151,15 +163,24 @@ DATABASE_URL=postgresql://statler:12345aBc@192.168.0.8:5432/lireddit3
 
 29. Set a custom domain that you own for the application
 
-  dokku domains:set api statlertronikdokku.hopto.org
+//  dokku domains:set api statlertronikdokku.hopto.org
+
+  dokku domains:clear api
+  dokku domains:set api api.lireddit.starprojects.pl.eu.org
 
 30. Enable letsencrypt for the app
 
+  WARNING!: Port mapping for the following to work has to be before: http:80:8080
+
   dokku letsencrypt:enable api
+
+  NOTE: it generates self signed certificate 
+
+    dokku certs:report api
 
 31. Map proxy port for "api" app 
 
-  dokku proxy:ports-add api https:443:8080 
+  dokku proxy:ports-add api https:443:8080      (or letsencrypt:enable adds it maybe?) 
 
             _____________________________________________
             |                            _____________  |
@@ -172,7 +193,21 @@ DATABASE_URL=postgresql://statler:12345aBc@192.168.0.8:5432/lireddit3
 root@dokku0306onubuntu2204-s-1vcpu-1gb-fra1-01:/home/dokku/api/nginx.conf.d# dokku proxy:ports api
 -----> Port mappings for api
     -----> scheme  host port  container port
+    http           80         8080
     https          443        8080
+
+    dokku proxy:ports-remove api http:80:8080   
+
+-----> Port mappings for api
+    -----> scheme  host port  container port
+    https          443        8080
+
+##############################################################################
+#
+# Frontend available at: www.lireddit.starprojects.pl.eu.org
+#                        lireddit.starprojects.pl.eu.org
+#
+##############################################################################
 
 32. Install this to use Vercel CLI
 
@@ -264,3 +299,92 @@ github.com/benawad/how-to-debug-cookies
 
 There's a problem!!!
   POST https://statlertronikdokku.hopto.org/graphql net::ERR_HTTP2_PROTOCOL_ERROR 200 (OK)
+
+42. In server/src/index.ts uncomment
+
+    app.set("trust proxy", 1);
+
+43. Add to .env
+
+    COOKIES_DOMAIN=
+
+44. Add to .env.production
+
+    COOKIES_DOMAIN=statlertronikdokku.hopto.org
+
+45. Add to .env.example.production
+
+    COOKIES_DOMAIN=
+
+46. Run 
+ 
+    yarn workspace server gen-env
+
+47. Modify server/src/index.ts
+
+    app.use(
+      session({
+        [...]
+        cookie: {
+          [...]
+          domain: __prod__ ? process.env.COOKIES_DOMAIN : undefined
+        },
+        [...]
+      })
+    );
+
+    then build docker IMAGE
+
+      sudo docker build -t x68st91aadd/lireddit:4 -f Dockerfile-server .
+
+    then Login to dockerhub
+
+      sudo docker login
+
+    next push the image to the github repository
+
+      sudo docker push x68st91aadd/lireddit:4
+ 
+    next ssh to dokku droplet
+
+    next deploy from docker image  
+
+      dokku git:from-image api x68st91aadd/lireddit:4
+
+48. To automate deployment create script in root of the monrepo
+
+    deploy.sh (Linux)
+    ...............................
+    #!/bin/bash
+
+    echo What should the version be?
+    read VERSION
+
+    sudo docker build -t x68st91aadd/lireddit:$VERSION -f Dockerfile-server .
+    sudo docker login
+    sudo docker push x68st91aadd/lireddit:$VERSION
+
+    ssh root@138.197.180.80 "dokku git:from-image api x68st91aadd/lireddit:$VERSION"
+    ...............................
+
+    then
+
+      chmod +x deploy.sh
+
+.......................................................
+Note: to ssh to server:
+      1. on local machine
+         cat /home/<user>/.ssh
+
+      2. copy to clipboard
+
+      3. on server machine
+         nano /root/.ssh/authorized_keys
+
+      4. Add line with prevoiusly copied to clipboard public key
+
+      5. ssh root@<ip-addr>           
+.......................................................
+
+
+
