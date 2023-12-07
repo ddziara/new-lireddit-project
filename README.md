@@ -13,7 +13,7 @@ A user can then post to the blog and vote up/down for his own and other users po
 
 ## Technologies
 
-The project utilizes the following technologied:
+The project utilizes the following technologies:
 
 * Node.js - JavaScript runtime environment
 
