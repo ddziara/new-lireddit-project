@@ -31,7 +31,7 @@ export const EditPost = ({}) => {
   return (
     <Layout variant="small">
       <Formik
-        initialValues={{ title: data!.post!.title, text: data!.post!.text }}
+        initialValues={{ title: data?.post?.title || "", text: data?.post?.text || "" }}
         onSubmit={async (values, { setErrors }) => {
           await updatePost({ variables: { id: intId, ...values }});
           // router.push("/");
