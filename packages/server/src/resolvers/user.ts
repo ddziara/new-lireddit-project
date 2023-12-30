@@ -134,7 +134,8 @@ export class UserResolver {
 
     await sendEmail(
       email,
-      `<a href=${process.env.WEB_URL}/change-password/${token}>reset password</a>`
+      `<a href=${process.env.WEB_URL}/change-password/${token}>reset password</a>`,
+      `Visit ${process.env.WEB_URL}/change-password/${token} to reset password`
     );
 
     return true;
