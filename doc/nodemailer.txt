@@ -415,8 +415,8 @@ In config.js:
 --------------------------------------------------------------------------------
 module.exports = {
   user: asdsafsdf@gmail.com,
-  clientId: 780887747986-kdkcmnkq5f2rjra6vfj9p6m64c3h7anj.apps.googleusercontent.com,
-  clientSecret: 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,
+  clientId: <...>,
+  clientSecret: <...>,
   refreshToken: *************
 }
 --------------------------------------------------------------------------------
