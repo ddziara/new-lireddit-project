@@ -50,10 +50,10 @@ export class PostResolver {
 
   @FieldResolver(() => Int, {nullable: true})
   async voteStatus(@Root() post: Post, @Ctx() { updootLoader, req }: MyContext) {
+    // console.log(`************************ ${req?.session.userId}`)
     if(!req?.session.userId) {
       return null;
     }
-
     const updoot = await updootLoader.load({postId: post.id, userId: req?.session.userId});
 
     return updoot ? updoot.value : null;

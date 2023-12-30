@@ -6,8 +6,6 @@ import React, { useState } from "react";
 import { InputField } from "../../components/InputField";
 import { Wrapper } from "../../components/Wrapper";
 import { toErrorMap } from "../../utils/toErrorMap";
-import login from "../login";
-import { useMutation } from "urql";
 import { ChangePasswordDocument, RegularUserFragment } from "../../gql/graphql";
 import { useFragment } from "../../gql";
 import {
@@ -16,13 +14,13 @@ import {
   RegularErrorFragment,
   RegularUserFragmentDoc,
 } from "../../gql/graphql";
-import { withUrqlClient } from "next-urql";
-import { createUrqlClient } from "../../utils/createUrqlClient";
 import NextLink from "next/link";
+import { useMutation } from "@apollo/client";
+import { createWithApollo } from "../../utils/createWithApollo";
 
 export const ChangePassword: NextPage<{}> = () => {
   const router = useRouter();
-  const [, changePassword] = useMutation(ChangePasswordDocument);
+  const [changePassword] = useMutation(ChangePasswordDocument);
   const [tokenError, setTokenError] = useState("");
 
   return (
@@ -30,10 +28,30 @@ export const ChangePassword: NextPage<{}> = () => {
       <Formik
         initialValues={{ newPassword: "" }}
         onSubmit={async (values, { setErrors }) => {
-          const response = await changePassword({
+          const response = await changePassword({ variables: {
             newPassword: values.newPassword,
             token: typeof router.query.token === "string" ? router.query.token : "",
-          }); // returning Promise to avoid forever spinning on Submit button
+          },
+            update(cache, {data}) {
+              if(data) {
+                const { changePassword } = data;
+
+                const regularUserResponseFragment = useFragment(RegularUserResponseFragmentDoc, changePassword);
+
+                const regularErrorFragment = useFragment(RegularErrorFragmentDoc, regularUserResponseFragment.errors);
+                const regularUserFragment = useFragment(RegularUserFragmentDoc, regularUserResponseFragment.user);
+
+                if(!regularErrorFragment && regularUserFragment) {
+                  cache.modify({fields: {
+                    me() {
+                      cache.writeFragment({fragment: RegularUserFragmentDoc, data: regularUserFragment})
+                    }
+                  }});
+                  cache.evict({fieldName: "posts"});
+                }
+              }
+            }
+        }); // returning Promise to avoid forever spinning on Submit button
 
           const regularUserResponse = useFragment(
             RegularUserResponseFragmentDoc,
@@ -101,4 +119,4 @@ export const ChangePassword: NextPage<{}> = () => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(ChangePassword);
+export default createWithApollo<{}, {}>()({ssr: false})(ChangePassword);

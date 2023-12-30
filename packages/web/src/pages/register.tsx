@@ -1,18 +1,21 @@
 import React from "react";
 import { Form, Formik } from "formik";
-import {
-  Box,
-  Button,
-} from "@chakra-ui/react";
+import { Box, Button } from "@chakra-ui/react";
 import { Wrapper } from "../components/Wrapper";
 import { InputField } from "../components/InputField";
-import { useMutation, useQuery } from "urql";
-import { RegisterDocument, RegularErrorFragment, RegularErrorFragmentDoc, RegularUserFragment, RegularUserFragmentDoc, RegularUserResponseFragmentDoc } from "../gql/graphql";
+import {
+  RegisterDocument,
+  RegularErrorFragment,
+  RegularErrorFragmentDoc,
+  RegularUserFragment,
+  RegularUserFragmentDoc,
+  RegularUserResponseFragmentDoc,
+} from "../gql/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/router";
-import { withUrqlClient } from "next-urql";
-import { createUrqlClient } from "../utils/createUrqlClient";
 import { useFragment } from "../gql";
+import { useMutation } from "@apollo/client";
+import { createWithApollo } from "../utils/createWithApollo";
 
 interface registerProps {}
 
@@ -21,16 +24,35 @@ interface registerProps {}
 
 export const Register: React.FC<registerProps> = () => {
   const router = useRouter();
-  const [, register] = useMutation(RegisterDocument);
+  const [register] = useMutation(RegisterDocument);
 
   return (
     <Wrapper variant="small">
       <Formik
         initialValues={{ email: "", user: "", password: "" }}
         onSubmit={async (values, { setErrors }) => {
-console.log("onSubmit() #1");          
-          const response = await register({ options: values }); // returning Promise to avoid forever spinning on Submit button
-          console.log("onSubmit() #2", response);          
+          const response = await register({ 
+            variables: { options: values },
+            update(cache, {data}) {
+              if(data) {
+                const { register } = data;
+
+                const regularUserResponseFragment = useFragment(RegularUserResponseFragmentDoc, register);
+
+                const regularErrorFragment = useFragment(RegularErrorFragmentDoc, regularUserResponseFragment.errors);
+                const regularUserFragment = useFragment(RegularUserFragmentDoc, regularUserResponseFragment.user);
+
+                if(!regularErrorFragment && regularUserFragment) {
+                  cache.modify({fields: {
+                    me() {
+                      cache.writeFragment({fragment: RegularUserFragmentDoc, data: regularUserFragment})
+                    }
+                  }});
+                  cache.evict({fieldName: "posts"});
+                }
+              }
+            }
+          }); // returning Promise to avoid forever spinning on Submit button
 
           const regularUserResponse = useFragment(
             RegularUserResponseFragmentDoc,
@@ -38,7 +60,7 @@ console.log("onSubmit() #1");
           );
 
           let errors: readonly RegularErrorFragment[] | null | undefined;
-          let user: RegularUserFragment | null | undefined
+          let user: RegularUserFragment | null | undefined;
 
           if (regularUserResponse) {
             errors = useFragment(
@@ -47,17 +69,17 @@ console.log("onSubmit() #1");
             );
 
             user = useFragment(
-                RegularUserFragmentDoc,
-                regularUserResponse.user
-              );
-           }
-console.log("errors: ", errors);
-console.log("user: ", user);
+              RegularUserFragmentDoc,
+              regularUserResponse.user
+            );
+          }
+          // console.log("errors: ", errors);
+          // console.log("user: ", user);
           if (errors) {
             setErrors(toErrorMap(errors));
           } else if (user) {
             // worked
-            router.push("/");   // go back to the home page
+            router.push("/"); // go back to the home page
           }
         }}
       >
@@ -95,4 +117,4 @@ console.log("user: ", user);
   );
 };
 
-export default withUrqlClient(createUrqlClient)(Register);
+export default createWithApollo<registerProps, registerProps>()({ssr: false})(Register);

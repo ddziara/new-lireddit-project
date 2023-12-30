@@ -5,7 +5,7 @@ client side
 
 =================================================================
 for ssr cookie isn't send to graphql api
-chnages to make
+changes to make
 
 1.
 
@@ -51,3 +51,12 @@ export const NavBar: React.FC<NavBarProps> = (props) => {
     query: MeDocument,
     pause: isServer(),
   });
+===================================================
+for Apollo client
+
+const apolloClient = (ctx: NextPageContext) => new ApolloClient({
+  uri: process.env.NEXT_PUBLIC_API_URL,
+  credentials: "include",
+  headers: {
+    cookie: (typeof window === "undefined" ? ctx.req?.headers.cookie : undefined) || ""
+  },

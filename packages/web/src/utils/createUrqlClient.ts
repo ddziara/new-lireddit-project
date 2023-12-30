@@ -103,7 +103,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
     cookie = ctx?.req?.headers?.cookie;
   }
 
-  console.log("api url: ", process.env.NEXT_PUBLIC_API_URL);
+  // console.log("api url: ", process.env.NEXT_PUBLIC_API_URL);
 
   return {
     url: process.env.NEXT_PUBLIC_API_URL,

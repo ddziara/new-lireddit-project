@@ -7,10 +7,8 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { withUrqlClient } from "next-urql";
 import NextLink from "next/link";
 import { useState } from "react";
-import { useQuery } from "urql";
 import { EditDeletePostsButtons } from "../components/EditDeletePostsButtons";
 import { Layout } from "../components/Layout";
 import { UpdootSection } from "../components/UpdootSection";
@@ -21,21 +19,17 @@ import {
   PostsDocument,
   RegularUserFragmentDoc,
 } from "../gql/graphql";
-import { createUrqlClient } from "../utils/createUrqlClient";
 import { isServer } from "../utils/isServer";
+import { useQuery } from "@apollo/client";
+import { createWithApollo } from "../utils/createWithApollo";
 
 const Index = () => {
-  const [variables, setVariables] = useState<{
-    limit: number;
-    cursor: string | null;
-  }>({ limit: 15, cursor: null });
-
-  const [{ data, error, fetching }] = useQuery({
-    query: PostsDocument,
-    variables,
+  const { data, error, loading, fetchMore } = useQuery(PostsDocument, {
+    variables: { limit: 15, cursor: null },
+    notifyOnNetworkStatusChange: true         /* causes "loading" is updated */
   });
 
-  if (!fetching && !data) {
+  if (!loading && !data) {
     return (
       <div>
         <div>you got query failed for some reasons</div>
@@ -50,7 +44,7 @@ const Index = () => {
 
   return (
     <Layout>
-      {!data && fetching ? (
+      {!data && loading ? (
         <div>loading...</div>
       ) : (
         <Stack spacing={8}>
@@ -91,13 +85,14 @@ const Index = () => {
                 PostSnippetFragmentDoc,
                 data.posts.posts[data.posts.posts.length - 1]
               );
+              // console.log("postSnippet: ", postSnippet);
 
-              setVariables({
-                limit: variables.limit,
+              fetchMore({variables: {
+                // "limit" is omitted because current variables will be merged with those from original query, hence "limit" retains original value
                 cursor: postSnippet.createdAt,
-              });
+              }});
             }}
-            isLoading={fetching}
+            isLoading={loading}
             m="auto"
             my={8}
           >
@@ -109,4 +104,4 @@ const Index = () => {
   );
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(Index);
+export default createWithApollo()({ssr: true})(Index);

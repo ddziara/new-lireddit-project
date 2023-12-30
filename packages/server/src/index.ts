@@ -53,7 +53,7 @@ const main = async () => {
     credentials: true,
   };
 
-  console.log(corsOptions);
+  // console.log(corsOptions);
 
   app.use(cors<cors.CorsRequest>(corsOptions));
 

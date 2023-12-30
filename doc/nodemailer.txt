@@ -1,0 +1,883 @@
+https://nodemailer.com/
+
+In email sending, CC is the abbreviation for “carbon copy.”
+
+BCC stands for “blind carbon copy.” Just like CC, BCC is a way 
+of sending copies of an email to other people. The difference 
+between the two is that, while you can see a list of recipients 
+when CC is used, that’s not the case with BCC. It’s called 
+blind carbon copy because the other recipients won’t be able 
+to see that someone else has been sent a copy of the email.
+
+======================================================
+https://support.google.com/accounts/answer/6010255?hl=en#more-secure-apps-how
+
+How more secure apps help protect your account
+When a third-party app meets our security standards, you can:
+
+* See what level of account access you’re giving the app before you connect your Google Account
+
+* Let the app access only a relevant part of your Google Account, like your email or calendar
+
+* Connect your Google Account to the app without exposing your password
+
+* Disconnect your Google Account from the app at any time
+
+======================================================
+Setting up Gmail OAuth2
+https://docs.emailengine.app/setting-up-gmail-oauth2-for-imap-api/?utm_source=nodemailer&utm_campaign=nodemailer&utm_medium=oauth-link
+
+To start go to Google Cloud Console and "Select a Project" in the top menu.
+https://console.cloud.google.com/welcome?ref=docs.emailengine.app&project=passport-test-398709
+
+In this example, we'll be using "IMAP API" as the project's name.
+
+At first, the project is empty, so we have to configure it. Click on the top-left hamburger menu, 
+find "APIs & Services" and select "OAuth consent screen".
+
+Now we have to decide which kind of users do we give access to. In this section, we select "External", 
+so that non-organization accounts could also be used but beware, making this app actually public would 
+mean a months-long security audit and boatloads of money to pay for it. So for test purposes, 
+we are keeping it semi-public, which means we can list up to 100 Gmail/G-Suite accounts that are allowed 
+to use our app.
+
+App name again, we'll just go with the project's name, that is "IMAP API". We also need to provide 
+support and developer email addresses.
+
+The thing is that the scope we need to select is not listed and can't be searched for. So we have 
+to add it manually. The exact scope to add is "https://mail.google.com/" (without quotes).
+
+Now that we added the missing scope we can select it.
+
+By the way, the scope we used gives us access to IMAP and SMTP, also to the public user profile. 
+No more no less.
+
+Anyway, after confirming that the Gmail scopes table includes the required scope we can save and 
+continue.
+
+You can manually list Gmail or G-Suite user accounts here that are allowed to use your app.
+
+From the left side menu, under APIs & Services, select Credentials.
+
+The credentials list is empty at first, so we need to create some by clicking on 
+the "Create credentials" button and then selecting "OAuth client ID" from the drop-down list.
+
+The application type is "Web application".
+
+We also need to provide some URIs. First is the application URI without any path part. 
+The default for EmailEngine is "http://127.0.0.1:3000" but you might have something else, 
+depending on your setup.
+
+Next is the Oauth redirect URL. Once the user has given consent, Google will be redirecting 
+the user to this URL with appropriate tokens, so it must point to the EmailEngine's OAuth 
+handling page. Basically, it's the app URI + "/oauth", eg. "http://127.0.0.1:3000/oauth".
+
+Hit the "Create" button and once back on the Credentials page check the "OAuth 2.0 Client IDs" 
+section. It should list the credentials we just created. Click on the download button and that's 
+it, we have our credentials!
+
+======================================================================
+Gmail OAuth Service Accounts
+
+https://docs.emailengine.app/gmail-oauth-service-accounts/?utm_source=nodemailer&utm_campaign=nodemailer&utm_medium=oauth-link
+
+In the context of email, it's a simple but powerful way for the domain admin to grant 
+access to every email account on the domain without user consent.
+
+Step 1. Create a new project
+
+First, open Google Cloud Console and create a new project.
+
+https://console.cloud.google.com/welcome?ref=docs.emailengine.app&project=imap-api-409016
+
+Project Name: Service Test
+
+
+Step 2. OAuth consent screen
+
+Now that we have our project created, we can set it up. We start by configuring the consent screen. 
+Usually, this would be the screen shown to users to ask for their consent. We do not need user 
+consent for service accounts, but the form allows us to configure some details about the project 
+that needs to be set.
+
+One of the critical parts of the consent screen setup is to select the correct User Type. 
+For service account projects, this must be "Internal."
+
+[Because you’re not a Google Workspace user, you can only make your app available to external 
+(general audience) users.]
+
+Next are standard fields that we must configure but do not matter much as the users never see these.
+
+App name: EmailEngine Service Test
+
+User support email:
+
+To allow EmailEngine to access IMAP and SMTP, we must set up the correct scope for the project.
+
+The scope required for IMAP and SMTP is not listed by default, so we need to add it manually.
+Scroll to the end of the list and insert "https://mail.google.com/" (without quotes) to the list.
+
+
+Step 3. Create a service account
+
+o start the setup for the service account, navigate to the Credentials page and click on 
+the "Manage service accounts" link on the right bottom corner.
+
+Next, find the "Create service account" button.
+
+Service account name: EmailEngine 2LO test
+
+Service account description: Testing with EmailEngine
+
+When you are asked to select a role, choose "Owner." I'm not 100% sure if it's required, 
+but it worked for me.
+
+Leave the following fields empty and click on "Done" to finish the setup.
+
+
+Step 4. Enable domain-wide delegation
+
+If you think you can access any email account just like that, you don't. 
+This is where the domain admin part comes into play.
+
+First, we need the OAuth2 Client ID value for our service account. You can find it 
+from the listing. Copy it.
+
+Open Google Admin for your domain and search for "API Controls."
+
+https://accounts.google.com/v3/signin/challenge/pwd?TL=AHNYTIQiV37JqBwRNGBbnDAlySdQZQhN285R4ccPDtrZQwWK4oxTgAJ9bUukb43v&cid=1&continue=https%3A%2F%2Fadmin.google.com%2F%3Fref%3Ddocs.emailengine.app%26pli%3D1&flowName=GlifWebSignIn&ifkv=ASKXGp3jo2KdBm6AwRCZt302VTESbp9Cr1D83Q8GBMfikSAnNC1ehjit8swJqk3QL4ECb6ESUV2u&osid=1&rart=ANgoxccDgffC8hHCBPdyIHV-LnCqmuzD0eDZ3KgvlRNciQlLRUdJuWSbT5IBHV8k3mlw8yuj2396AkmhuNZE5YI6_ypWaLzOUqLH9U9o4piwEMRXr6wVfSg&rpbg=1&sarp=1&theme=glif
+
+Scroll down on the opened page to find a Domain-wide delegation" section. 
+Click on the button to manage it.
+
+Now we can use that Client ID that we copied earlier. Also, set the same OAuth2 
+scope as in the consent screen setup ("https://mail.google.com/" without quotes). 
+Click in "Authorize" to finish setting up the delegation.
+
+
+Step 5. Acquiring the credentials file
+
+Open the context menu for our service account on the service accounts page and 
+click on the "Manage keys" menu option.
+
+Create a new key from the Add Key menu.
+
+Select JSON as the format and click "Create" to create the key. The browser should 
+automatically download the generated key file as a .json file.
+
+
+Step 6. Enable Gmail API
+
+All API endpoints are disabled by default as this is a new project. EmailEngine 
+needs to use Gmail API to resolve account email address during account setup, 
+so we have to enable that API. You can find the "Enable APIs and Services button" 
+from the APIs & Services dashboard.
+
+
+Step 7. Configure EmailEngine
+
+Now that We have completed our Service Account setup, we can configure EmailEngine 
+to start using it.
+
+Navigate to the OAuth configuration page and select Gmail Service Accounts.
+
+Use the file input to load the service account key file. This would fill all 
+the required fields based on the information stored on that file.
+
+
+Step 8. Register an email account
+
+Now that EmailEngine is configured to support service accounts, we can add an email 
+account using the API. Note that we do not provide any kind of authentication options. 
+This is because email accounts added using the service accounts do not need it.
+
+
+######################################################################################
+######################################################################################
+######################################################################################
+https://rupali.hashnode.dev/send-emails-in-nodejs-using-nodemailer-gmail-oauth2
+
+Configure oAuth consent screen
+
+* Select your project
+
+* Go to API & Services tab
+
+Select oAuth consent screen from the dropdown
+
+1. Select external and then hit create
+
+2. Enter all the details carefully, then click save and continue
+
+3. In scops, click save and continue
+
+4. In Test users, enter your email address which you would like to use for sending emails
+
+Create credentials for your project
+
+* Click on credentials in the side menu
+
+* Click on create credentials
+
+  1. Select oAuth client ID from the dropdown
+
+  2. Select your application type
+
+  3. Scroll down to Authorised redirect URIs & add this URI developers.google.com/oauthplayground
+
+  4. Copy and save your client ID & client secret
+
+Get the refresh and access token
+
+* Now go to developers.google.com/oauthplayground
+
+* On the top-right corner, click the settings icon
+
+  1. Mark Use your own OAuth credentials
+
+  2. Enter the Client ID & Secret we've copied before
+
+* Now, in the left side, scroll down and select Gmail API v1
+
+* Select mail.google.com
+
+* Click on Authoirse APIs
+
+* Select your account (which you've added as Test user in the Google developer console)
+
+* Now, click on Exchange authorise code for tokens 
+
+Copy and save refresh & access token
+
+Set up Nodemailer & Send your first email
+
+First of all you will have to create a **.**env. And this file should include the following
+
+* USER_EMAIL: the email you have used in your google configuration
+
+* USER_PASS: the password of your email id
+
+* CLIENT_ID: it's the same client-id that we've got on the google developer console
+
+* CLIENT_SECRET: it's the same client-secret that we've got on google developer console
+
+* REFRESH_TOKEN: this is the refresh token we've generated on oAuth2 playground
+
+* ACCESS_TOKEN: this is the access token we've generated on oAuth2 playground
+
+#################################################################################
+#################################################################################
+#################################################################################
+Using OAuth2
+
+https://community.nodemailer.com/2-0-0-beta/using-oauth2/
+
+If a XOAuth2 token generator is used as the value for auth.xoauth2 when setting up 
+transporter object then you do not need to set the value for user or pass as OAuth2 
+is used for authenticated.
+
+XOAuth2 generator generates required accessToken itself if it is missing or expired. 
+If authentication fails, a new token is requested and the authentication is retried 
+once. If it still fails, an error is returned.
+
+Install xoauth2 module to use XOauth2 token generators (not included by default)
+
+npm install xoauth2 --save
+
+[Example]
+
+var nodemailer = require('nodemailer');
+var xoauth2 = require('xoauth2');
+
+// listen for token updates (if refreshToken is set)
+// you probably want to store these to a db
+generator.on('token', function(token){
+    console.log('New token for %s: %s', token.user, token.accessToken);
+});
+
+// login
+var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        xoauth2: xoauth2.createXOAuth2Generator({
+            user: '{username}',
+            clientId: '{Client ID}',
+            clientSecret: '{Client Secret}',
+            refreshToken: '{refresh-token}',
+            accessToken: '{cached access token}'
+        })
+    }
+});
+
+#################################################################################
+#################################################################################
+#################################################################################
+How to send emails using NodeMailer, gmail and OAuth2
+
+https://alexb72.medium.com/how-to-send-emails-using-a-nodemailer-gmail-and-oauth2-fe19d66451f9
+
+Create "server.js" int the root of the project
+
+npm install express body-parser nodemailer googleapis
+
+In "server.js"
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const nodemailer = require('nodemailer');
+const { google } = require("googleapis");
+const OAuth2 = google.auth.OAuth2;
+
+We then also create a “PORT” const which is set to either the environment variable of 
+the system it is deployed to i.e. Heroku for example. Otherwise it is set to port 3000. 
+This matters a lot more if you are deploying the API to an online hosting service, 
+if you were to just set the variable to 3000 and deployed it to Heroku or Amazon then 
+an error would…
+
+#################################################################################
+#################################################################################
+#################################################################################
+video: 
+  F:\Statler\Full Stack\Authentication, Authorization\docs\Melvin Adekanye\Node.js - SEND Emails Using Nodemailer   Gmail   OAuth2.mp4
+
+Create: server.js
+
+In server.js:
+--------------------------------------------------------------------------------
+const nodemailer = require("nodemailer")
+const { google } = require("googleapis")
+const OAuth2 = google.auth.OAuth2
+--------------------------------------------------------------------------------
+
+npm install nodemailer googleapis
+
+Head to Google Cloud 
+Next click on "Console"
+Create a new project "Node Mailer"
+Select "APIs & Services" then "Credentials"
+Click "Create Credentials"
+Click "Configure Consent Screen"
+Choose "External" and click "CREATE"
+Next: 
+  App name: Node Mailer
+
+  Developer contact information
+  Email adddress: thegoatmailer@gmail.com  
+
+Click "SAVE AND CONTINUE"
+
+Go back to dashboard
+
+Click "Credentials" then "CREATE CREDENTIALS" and "OAuth client ID"
+
+Select "Web application"
+
+Add "Authorized redirect URIs"
+
+https://developers.google.com/oauthplayground
+
+Click "CREATE"
+
+Create: config.js
+
+In config.js:
+--------------------------------------------------------------------------------
+module.exports = {
+  clientId: 780887747986-kdkcmnkq5f2rjra6vfj9p6m64c3h7anj.apps.googleusercontent.com,
+  clientSecret: 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,
+}
+--------------------------------------------------------------------------------
+
+
+Visit: https://developers.google.com/oauthplayground
+
+Click settings icon (coggle wheel)
+
+Check "Use your own OAth credentials"
+
+Copy client ID & client secret
+
+Click "Close"
+
+In "Input your own scopes" type: https://mail.google.com
+
+Go to "OAuth consent screen" (Google Cloud Console)
+
+Add email as a test user ddziara@poczta.onet.pl
+
+Click "Authorize APIs" (on playground page)
+
+Click "Exchange authorization code for tokens"
+
+Copy refresh token
+
+In config.js:
+--------------------------------------------------------------------------------
+module.exports = {
+  user: asdsafsdf@gmail.com,
+  clientId: 780887747986-kdkcmnkq5f2rjra6vfj9p6m64c3h7anj.apps.googleusercontent.com,
+  clientSecret: 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,
+  refreshToken: *************
+}
+--------------------------------------------------------------------------------
+
+In server.js:
+--------------------------------------------------------------------------------
+const nodemailer = require("nodemailer")
+const { google } = require("googleapis")
+const config = require("./config.js)
+const OAuth2 = google.auth.OAuth2
+--------------------------------------------------------------------------------
+
+Go back on Google Cloud
+
+On "OAuth consent screen" click "PUBLISH APP"
+
+[
+  Push to production?
+
+  Your app will be available to any user with a Google Account
+  You do not need to aubmit your app for verification. If you change your app's
+  configuration in the future, like adding more then 10 domains, uploading a
+  logo, or requesting sensitive or restricted scopes, you will need to submit for
+  verification.
+]
+
+
+In server.js:
+--------------------------------------------------------------------------------
+const nodemailer = require("nodemailer")
+const { google } = require("googleapis")
+const config = require("./config.js)
+const OAuth2 = google.auth.OAuth2
+
+const OAuth2_client = new OAuth2(config.clientId, config.clientSecret)
+OAuth2_client.setCredentials( { refresh_token: config.refreshToken } )
+
+function send_mail(name, receipent) {
+  const accessToken = OAuth2_client.getAccessToken();     // generates a new access token
+
+  const transport = nodemailer,createTransport({
+    service: "gmail",
+    auth: {
+      type: "OAuth2",
+      user: config.user,
+      clientId: config.clientId,
+      clientSecret: config.clientSecret,
+      refreshToken: config.refreshToken,
+      accessToken
+    }
+  });
+
+  const mail_options = {
+    from: `The G.O.A.T. <${confid.user}>`,
+    to: receipent,
+    subject: "A Message from the G.O.A.T.",
+    text: get_html_message(name)
+  }
+
+  transport.sendMail(mail_options, function(error, result) {
+    if(error) {
+      console.log("Error: ", error)
+    }
+    else {
+      console.log("Error: ", error)
+    }
+    transport.close()
+  });
+}
+
+function get_html_message(name) {
+  return `
+    <h3> ${name}! You're Awesome. </h3>
+  `
+}
+
+send_mail("Joe", "aasfdf@ddd.com")
+--------------------------------------------------------------------------------
+
+#################################################################################
+#################################################################################
+#################################################################################
+video:
+  F:\Statler\Full Stack\Authentication, Authorization\docs\Mafia Codes\How to send email using Gmail API (uses OAuth2 and nodemailer).mp4
+
+Go to Google Cloud then "Console" 
+
+Click on projects list and then click on "NEW PROJECT"
+
+Project name: Gmail API tutorial
+
+Click "CREATE"
+
+Go to "APIs & Services" -. "OAuth consent screen"
+
+Check "User Type"   "External"
+
+Click "CREATE"
+
+App name: Gmail API tutorial
+
+Set "User support email" & "Email address" in "Developer contact information"
+
+Click "SAVE AND CONTINUE"
+
+Click "SAVE AND CONTINUE" again
+
+Click "SAVE AND CONTINUE" yet again
+
+Click "BACK TO DASHBOARD"
+
+Click "Credentials"
+
+Click "+ CREATE CREDENTIALS" and select "OAuth client ID"
+
+Application type: Web application
+
+Add "Authorized redirect URIs"   https://developer.google.com/oauthplayground
+
+Click "CREATE"
+
+Go to https://developer.google.com/oauthplayground
+
+Click gear icon
+
+Check "Use you own OAuth credentials"
+
+Paste "OAuth Client ID" & "OAuth Client secret"
+
+Check Gmail API v1. https://mail.google.com
+
+Click "Authorize APIs"
+
+Click "Exchange authorization code for tokens"
+
+-------------------------
+
+npm install googleapis nodemailer
+
+app.js
+---------------------------------------------------
+const nodemailer = require("nodemailer") 
+const { google } = require("googleapis")
+
+const CLIENT_ID = "<...>"
+const CLIENT_SECRET = "<...>"
+const REDIRECT_URI = "https://developer.google.com/oauthplayground"
+const REFRESH_TOKEN = "<...>"
+
+const oAuth2Client = oAuth2Client = new google.auth.OAuth(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
+oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN })
+
+async function sendMain() {
+  try {
+    const accessToken = await oAuth2Client.getAccessToken();
+
+    const transport = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        type: "OAuth2",
+        user: "<...>",
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        refreshToken: REFRESH_TOKEN,
+        accessToken
+      }
+    })
+ 
+    const mailOptions = {
+      from: "YOURSTRULY267 <email-address>",
+      to: "<email>",
+      subject: "Hellow from gmail using API",
+      text: "Hello from gmail email using API",
+      html: "<h1>Hello from gmail email using API</h1>",
+    }
+
+    const result = await transport.sendMail(mailOptions)
+    return result
+ }
+  catch(error) {
+    return error;
+  }
+}
+
+sendMail()
+.then(result => console.log("Email is sent...", result))
+.catch(error => console.log(error.message))
+---------------------------------------------------
+video:
+  F:\Statler\Full Stack\Authentication, Authorization\docs\Programming with AK\Mastering Gmail API Integration with Node.js A Comprehensive Guide.mp4
+
+Search for Google Cloud  
+
+Click "Console"
+
+Click buttun with project name and then "NEW PROJECT"
+
+Project name: gamil-api-test
+
+Click "CREATE"
+
+From menu choose "APIs and services" -> "OAuth consent screen"
+
+Select "User Type" as "External"
+
+Click "CREATE"
+
+App name: Gmail API Test
+
+Set emails
+
+Click "SAVE AND CONTINUE"
+
+No changes in scopes tab
+
+Click "SAVE AND CONTINUE"
+
+In "Test Users" tab click "+ ADD USERS" and add gmail address
+
+From menu click on "Credentials"
+
+Click "+ CREATE CREDENTIALS" then "OAuth client ID"
+
+Application type: Web application
+
+Under "Authorized redirect URIs" click "+ ADD URI"
+
+add "https://developers.google.com/oauthplayground"
+
+Click "CREATE"
+
+Go to https://developers.google.com/oauthplayground
+
+Select "Gmail API v1" -> "https://mail.google.com"
+
+Click on gear icon, check "Use your own OAuth credentials" then paste "OAuth Client ID" & "OAuth Client Secret"
+
+Click "Close"
+
+Click "Authorize APIs"
+
+Click "Exchange authorization code for tokers"
+
+In Visual Studio Code
+
+  npm i express
+
+  npm i axios dotenv
+
+  npm i googlesapis nodemailer
+
+Create ".env" file
+
+.env
+--------------------------------------------------------
+PORT=8000
+CLIENT_ID=
+CLIENT_SECRET=
+REDIRECT_URI=
+REFRESH_TOKEN=
+--------------------------------------------------------
+
+Create app.js
+
+app.js
+--------------------------------------------------------
+const express = require("express")
+const routes = require("./routes")
+
+require("dotenv").config();
+
+const app = express()
+
+app.listen(process.env.PORT, () => {
+  console.log("Listening on port ", process.env.PORT)
+})
+
+app.get("/", async (req, res) => {
+  res.send("Welcome to Gmail API with node.js")  
+})
+
+app.use("/api", routes)
+--------------------------------------------------------
+
+Create utils.js
+
+utils.js
+--------------------------------------------------------
+const createConfig = (url, accessToken) => {
+  return {
+    method: "get",
+    url,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Content-type: "application/json",
+    },
+  }
+}
+
+module.exports = { createConfig }
+--------------------------------------------------------
+
+Create contants.js
+
+contants.js
+--------------------------------------------------------
+require("dotenv").config();  // ?
+
+const auth = {
+  type: "OAuth2",
+  user: "<...>",
+  clientId: "<...>"
+  clientId: process.env.CLIENT_ID,
+  clientSecret: process.env.CLIENT_SECRET,
+  refreshToken: process.env.REFRESH_TOKEN,  
+}
+
+const mailOptions = {
+  from: "<...>",
+  to: "<...>",
+  subject: "Gmail API using Node.JS", 
+}
+
+module.exports = {
+  auth,
+  mailOptions,
+}
+--------------------------------------------------------
+
+Create routes.js
+
+routes.js
+--------------------------------------------------------
+const express = require("express")
+const controllers = require("./controllers")
+const router = express.router()
+
+router.get("/mail/user/:email", controllers.getUser)
+router.get("/mail/send", controllers.sendMail)
+router.get("/mail/drafts/:email", controllers.getDrafts)
+router.get("/mail/read/:messageId", controllers.readMail)
+router.get("/mail/list/:email", controllers.getMails)
+
+module.exports = router
+--------------------------------------------------------
+
+Create controllers.js
+
+controllers.js
+--------------------------------------------------------
+const axios = require("axios")
+const { createConfig } = require("./utils")
+const nodemailer = require("nodemailer")
+const CONSTANTS = require("./constants")
+const { google } = require("googleapis")
+
+require("dotenv").config()
+
+const oAuthClient = new google.auth.OAuth2(
+  process.env.CLIENT_ID,
+  process.env.CLIENT_SECRET,
+  process.env.REDIRECT_URI
+)
+
+oAuthClient.setCredentials({
+  refresh_token: process.env.REFRESH_TOKEN
+})
+
+async function sendMail(req, res) {
+  try {
+    const accessToken = await oAuthClient.getAccessToken()
+    let token = await accessToken.token
+
+    const transport = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        ...CONSTANTS.auth,
+        accessToken: token,
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    })
+
+    const mailOptions = {
+      ...CONSTANTS.mailOptions,
+      text: "This is a test mail using Gmail API"
+    }
+
+    const result = await transport.sendMain(mailOptions)
+    res.send(result)
+  }
+  catch(error) {
+    console.log(error)
+    res.send(error);
+  }
+}
+
+async function getUser(req, res) {
+  try {
+    const url = "https://gmail.googleapis.com/gmail/v1/${req.params.email}/profile"
+    const { token } = await oAuthClient.getAccessToken()
+    const config = createConfig(url, token)
+    const response = await axios(config)
+    res.json(response.data)
+  }
+  catch(error) {
+    console.log(error)
+    res.send(error);
+  }
+}
+
+async function getMails(req, res) {
+  try {
+    const url = "https://gmail.googleapis.com/gmail/v1/${req.params.email}/threads?maxResults=100"
+    const { token } = await oAuthClient.getAccessToken()
+    const config = createConfig(url, token)
+    const response = await axios(config)
+    res.json(response.data)
+  }
+  catch(error) {
+    console.log(error)
+    res.send(error);
+  }
+}
+
+async function getDrafts(req, res) {
+  try {
+    const url = "https://gmail.googleapis.com/gmail/v1/${req.params.email}/drafts"
+    const { token } = await oAuthClient.getAccessToken()
+    const config = createConfig(url, token)
+    const response = await axios(config)
+    res.json(response.data)
+  }
+  catch(error) {
+    console.log(error)
+    res.send(error);
+  }
+}
+
+async function readMail(req, res) {
+  try {
+    const url = "https://gmail.googleapis.com/gmail/v1/${req.params.email}/messages/${req.params.messageId}"
+    const { token } = await oAuthClient.getAccessToken()
+    const config = createConfig(url, token)
+    const response = await axios(config)
+
+    let data = await response.data;
+    res.json(data)
+  }
+  catch(error) {
+    console.log(error)
+    res.send(error);
+  }
+}
+
+
+module.exports = {
+  getUser,
+  getMails,
+  getDrafts,
+  readMail,
+}
+-------------------------------------------------------

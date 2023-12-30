@@ -134,7 +134,7 @@ export class UserResolver {
 
     await sendEmail(
       email,
-      `<a href=http://192.168.0.8:3000/change-password/${token}>reset password</a>`
+      `<a href=${process.env.WEB_URL}/change-password/${token}>reset password</a>`
     );
 
     return true;
@@ -142,6 +142,7 @@ export class UserResolver {
 
   @Query(() => User, { nullable: true })
   me(@Ctx() { req }: MyContext) {
+    // console.log(`=======================> me: userId: ${req!.session.userId}`);
     // you are not logged in
     // console.log("me(): req.sesson", req!.session)
     if (!req!.session.userId) {
@@ -207,6 +208,7 @@ export class UserResolver {
     @Arg("password") password: string,
     @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
+    // console.log("LOGIN");
     const user = await User.findOneBy(
       usernameOrEmail.includes("@")
         ? { email: usernameOrEmail }
