@@ -1,0 +1,20 @@
+https://www.linkedin.com/pulse/heroku-free-tier-alternatives-hayk-simonyan/
+
+https://render.com/   (login with github)
+
+Add PostgreSQL database
+
+Add REDIS database
+
+Add LiReddit server from Docker image
+
+Add the following environment variables using appropriate connection string as values (internal connection strings)
+
+  DATABASE_URL
+  REDIS_URL
+
+Configure DNS
+
+  Add CNAME record: api.lireddit pointing to lireddit-api-8dss.onrender.com  (following instructins)
+
+  now problem with certificate
