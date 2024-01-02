@@ -5,7 +5,8 @@ import { NextPageContext } from "next";
 
 const f1 = (ctx?: NextPageContext) => {
   // console.log(`-----------------------------@@ typeof window === "undefined": ${typeof window === "undefined"}`)
-  console.log(`-----------------------------@@ ctx?.req?.headers.cookie: ${ctx?.req?.headers.cookie}`)
+  // console.log(`-----------------------------@@ ctx?.req?.headers.cookie: ${ctx?.req?.headers.cookie}`)
+  console.log(`-----------------------------@@ ctx?.req: ${ctx?.req}`)
   return (typeof window === "undefined" ? ctx?.req?.headers.cookie : undefined) || "";
 }
 
