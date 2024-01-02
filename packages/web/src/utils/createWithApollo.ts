@@ -3,19 +3,11 @@ import { withApollo } from "next-apollo";
 import { PaginatedPosts } from "../gql/graphql";
 import { NextPageContext } from "next";
 
-const f1 = (ctx?: NextPageContext) => {
-  // console.log(`-----------------------------@@ typeof window === "undefined": ${typeof window === "undefined"}`)
-  // console.log(`-----------------------------@@ ctx?.req?.headers.cookie: ${ctx?.req?.headers.cookie}`)
-  console.log(`-----------------------------@@ ctx?.req?.headers: ${JSON.stringify(ctx?.req?.headers)}`)
-  return (typeof window === "undefined" ? ctx?.req?.headers.cookie : undefined) || "";
-}
-
 const apolloClient = (ctx?: NextPageContext) => new ApolloClient({
   uri: process.env.NEXT_PUBLIC_API_URL,
   credentials: "include",
   headers: {
-    // cookie: (typeof window === "undefined" ? ctx?.req?.headers.cookie : undefined) || ""
-    cookie: f1(ctx)
+    cookie: (typeof window === "undefined" ? ctx?.req?.headers.cookie : undefined) || ""
   },
   cache: new InMemoryCache({
     typePolicies: {

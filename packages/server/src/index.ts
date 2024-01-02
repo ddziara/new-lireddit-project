@@ -67,7 +67,7 @@ const main = async () => {
         httpOnly: true, // JavaScript won't see it in document.cookie
         sameSite: "lax", // csrf
         secure: __prod__, // only https
-        // domain: __prod__ ? process.env.COOKIES_DOMAIN : undefined
+        domain: __prod__ ? process.env.COOKIES_DOMAIN : undefined
       },
       resave: false, // required: force lightweight session keep alive (touch)
       saveUninitialized: false, // recommended: only save session when data exists
